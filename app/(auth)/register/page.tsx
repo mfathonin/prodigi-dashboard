@@ -11,19 +11,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export default function Login() {
+export default function Register() {
   const registerSchema = z.object({
     email: z
       .string()
-      .min(0, "Email tidak boleh kosong")
+      .min(1, "Email tidak boleh kosong")
       .email("Email tidak valid"),
-    password: z.string().min(0, "Password tidak boleh kosong"),
+    password: z
+      .string()
+      .min(1, "Password tidak boleh kosong")
+      .min(6, "Password minimal 6 karakter"),
     code: z
       .string()
-      .min(0, "Code tidak boleh kosong")
+      .min(1, "Code tidak boleh kosong")
       .max(8, "Kode tidak valid"),
   });
 
@@ -92,16 +96,20 @@ export default function Login() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full mt-4">
-            Login
+          <Button
+            type="submit"
+            className="w-full mt-4"
+            disabled={!loginForm.formState.isValid}
+          >
+            Daftar
           </Button>
         </form>
       </Form>
       <p className="text-center text-sm text-gray-500">
         Sudah punya akun?{" "}
-        <a className="anchor" href="/login">
+        <Link className="underline" href="/login">
           Masuk
-        </a>
+        </Link>
       </p>
     </>
   );

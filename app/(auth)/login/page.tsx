@@ -19,14 +19,14 @@ export default function Login() {
   const loginSchema = z.object({
     email: z
       .string()
-      .min(0, "Email tidak boleh kosong")
+      .min(1, "Email tidak boleh kosong")
       .email("Email tidak valid"),
-    password: z.string().min(0, "Password tidak boleh kosong"),
+    password: z.string().min(1, "Password tidak boleh kosong"),
   });
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    reValidateMode: "onBlur",
+    reValidateMode: "onChange",
     defaultValues: {
       email: "",
       password: "",
@@ -75,14 +75,18 @@ export default function Login() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full mt-4">
-            Login
+          <Button
+            type="submit"
+            className="w-full mt-4"
+            disabled={!loginForm.formState.isValid}
+          >
+            Masuk
           </Button>
         </form>
       </Form>
       <p className="text-center text-sm text-gray-500">
         Belum punya akun?{" "}
-        <Link href="/register" className="anchor">
+        <Link href="/register" className="underline">
           Daftar disini
         </Link>
       </p>
