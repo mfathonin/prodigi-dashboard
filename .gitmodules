@@ -1,0 +1,3 @@
+[submodule "supa-service"]
+	path = supa-service
+	url = git@github.com:mfathonin/supa-host.git
