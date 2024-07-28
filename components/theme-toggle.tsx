@@ -1,12 +1,16 @@
 "use client";
 
-import * as React from "react";
 import { MoonIcon, SunIcon } from "@radix-ui/react-icons";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function ThemeToggle() {
+export type ThemeToggleProps = {
+  className?: string;
+};
+
+export function ThemeToggle({ className }: ThemeToggleProps) {
   const { setTheme, theme, resolvedTheme, systemTheme } = useTheme();
   const isDark = (resolvedTheme ?? systemTheme ?? theme) === "dark";
 
@@ -16,7 +20,7 @@ export function ThemeToggle() {
 
   return (
     <Button
-      className="fixed top-4 right-4 z-50"
+      className={cn("z-50", className)}
       variant="outline"
       size="icon"
       onClick={toggleTheme}

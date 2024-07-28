@@ -11,44 +11,47 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  type Register,
-  registerDefaultValues,
-  registerSchema,
-} from "@/models/users";
+import { type Login, loginDefaultValues, loginSchema } from "@/models/users";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export default function RegisterForm() {
-  const [errorMessages, setErrorMessages] = useState<string>();
+import { handleSignIn } from "../actions";
 
-  const loginForm = useForm<Register>({
-    resolver: zodResolver(registerSchema),
-    reValidateMode: "onBlur",
-    defaultValues: registerDefaultValues,
+export default function LoginForm() {
+  const [errorMessage, setError] = useState<string | null>(null);
+
+  const loginForm = useForm<Login>({
+    resolver: zodResolver(loginSchema),
+    reValidateMode: "onChange",
+    defaultValues: loginDefaultValues,
   });
 
-  const onRegisterSubmit = (values: Register) => {
-    console.log(values);
+  const onLoginSubmit = async (values: Login) => {
+    const { data, error } = await handleSignIn(values.email, values.password);
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
   };
 
   return (
     <>
       {/* Error message when user provide wrong auth details */}
-      {errorMessages && (
+      {errorMessage && (
         <ErrorWrapper>
-          <p>{errorMessages}</p>
+          <p>{errorMessage}</p>
         </ErrorWrapper>
       )}
 
-      {/* Register form */}
+      {/* Login form */}
       <Form {...loginForm}>
         <form
           className="w-auto text-start flex flex-col gap-y-3"
-          onSubmit={loginForm.handleSubmit(onRegisterSubmit)}
+          onSubmit={loginForm.handleSubmit(onLoginSubmit)}
         >
           <FormField
             control={loginForm.control}
@@ -80,34 +83,29 @@ export default function RegisterForm() {
               </FormItem>
             )}
           />
-          <FormField
-            control={loginForm.control}
-            name="code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="Masukan kode Anda" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <Button
             type="submit"
             className="w-full mt-4"
             disabled={!loginForm.formState.isValid}
           >
-            Daftar
+            Masuk
           </Button>
         </form>
       </Form>
-      <p className="text-center text-sm text-gray-500">
-        Sudah punya akun?{" "}
-        <Link className="underline" href="/login">
-          Masuk
-        </Link>
-      </p>
+      <div className="flex flex-col gap-1 text-center text-gray-500 text-xs -mt-4">
+        <p>
+          Belum punya akun?{" "}
+          <Link href="/register" className="underline">
+            Daftar disini
+          </Link>
+        </p>
+        {/* <p>
+          Lupa password?{" "}
+          <Link href="/reset-password" className="underline">
+            Reset disini
+          </Link>
+        </p> */}
+      </div>
     </>
   );
 }
