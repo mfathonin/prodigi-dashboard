@@ -2,12 +2,13 @@ import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 
-import Image from "next/image";
-
-import { BookItem } from "./components/book-item";
+import BookList from "./components/book-list";
 import { MiniBookSelector } from "./components/mini-book-selector";
 
-const { books: dataDummy } = constants;
+const {
+  books: dataDummy,
+  searchParams: { BOOK_QUERY },
+} = constants;
 
 type BookListPageProps = {
   children: React.ReactNode;
@@ -42,7 +43,7 @@ const BookListLayout = async ({ children }: BookListPageProps) => {
             </p>
             {/* Toolbar */}
             <div className="flex gap-2 mb-6">
-              <SearchBox searchKey="book" placeholder="Cari buku" />
+              <SearchBox searchKey={BOOK_QUERY} placeholder="Cari buku" />
               <Button
                 variant="outline"
                 size="icon"
@@ -55,31 +56,7 @@ const BookListLayout = async ({ children }: BookListPageProps) => {
               </Button>
             </div>
 
-            {/* Book List */}
-            <div className="rounded-md bg-background w-full overflow-hidden">
-              <div className="max-h-[calc(70dvh-148px)] overflow-y-auto">
-                {/* Empty state */}
-                {books.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full p-6 py-10 gap-4">
-                    <Image
-                      src="/assets/svg/no-documents.svg"
-                      alt="empty state"
-                      width={120}
-                      height={120}
-                    />
-                    <div className="flex flex-col items-center justify-center">
-                      <p>Belum ada buku</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-600 text-center">
-                        Tambahkan buku untuk mengelola konten digital
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {books.map((book) => (
-                  <BookItem key={book.id} book={book} />
-                ))}
-              </div>
-            </div>
+            <BookList />
           </div>
         </div>
 

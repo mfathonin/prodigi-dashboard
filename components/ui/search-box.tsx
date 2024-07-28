@@ -1,20 +1,34 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { constants } from "@/lib/constants";
+
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const searchParamsOptions = constants.searchParams;
+
+type SearchKeyAllowed =
+  (typeof searchParamsOptions)[keyof typeof searchParamsOptions];
 
 export const SearchBox = ({
   searchKey,
   placeholder,
 }: {
-  searchKey: string;
+  searchKey: SearchKeyAllowed;
   placeholder: string;
 }) => {
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(
-    searchParams.get(searchKey) ?? ""
-  );
+  const searchQ = searchParams.get(searchKey) ?? "";
+  const [searchQuery, setSearchQuery] = useState(searchQ ?? "");
+
+  useEffect(() => {
+    if (searchQ === "" && searchQuery !== "") {
+      setSearchQuery("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQ]);
+
   const [timeout, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const router = useRouter();
 

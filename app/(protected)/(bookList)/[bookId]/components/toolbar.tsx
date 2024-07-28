@@ -7,7 +7,10 @@ import { downloadQRCodes } from "@/lib/utils";
 
 import { useParams, useSearchParams } from "next/navigation";
 
-const { CANVAS_QR_PREFIX_ID } = constants;
+const {
+  CANVAS_QR_PREFIX_ID,
+  searchParams: { CONTENT_QUERY },
+} = constants;
 
 export const Toolbar = () => {
   const params = useParams();
@@ -31,7 +34,7 @@ export const Toolbar = () => {
 
   return (
     <div className="flex gap-2">
-      <SearchBox searchKey="content" placeholder="Cari konten" />
+      <SearchBox searchKey={CONTENT_QUERY} placeholder="Cari konten" />
       <Button
         className="rounded-full flex gap-1 size-9 lg:size-fit"
         variant="secondary"

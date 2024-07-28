@@ -8,6 +8,12 @@ export const constants = {
       UNKNOWN: "Terjadi kesalahan dari server",
     },
   },
+  searchParams: {
+    BOOK_QUERY: "book",
+    CONTENT_QUERY: "content",
+    SORT_BY: "sortBy",
+    ORDER_BY: "orderBy",
+  } as const,
   // Dummy data
   books: [
     {
