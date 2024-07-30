@@ -1,11 +1,15 @@
-import { constants } from "@/lib/constants";
-import { dummyDelay } from "@/lib/utils";
+import { createClient } from "@/lib/supaclient/server";
 
 export const AttributesList = async ({ bookId }: { bookId: string }) => {
-  const attributes = await dummyDelay(
-    1500,
-    parseInt(bookId) % 2 === 0 ? constants.bookAttributes : []
-  );
+  const supabase = createClient();
+  const { data: attributes, error } = await supabase
+    .from("books_attributes_view")
+    .select("*")
+    .eq("book_id", bookId);
+
+  if (error) {
+    throw error;
+  }
 
   return (
     <>
@@ -15,7 +19,7 @@ export const AttributesList = async ({ bookId }: { bookId: string }) => {
             <tbody>
               {attributes.map((attr) => (
                 <tr
-                  key={attr.key}
+                  key={attr.attribute_id}
                   className="table-row !border-transparent !bg-transparent"
                 >
                   <td className="table-cell !py-1 !px-0 w-1/2 md:w-1/5 lg:w-2/12 text-slate-700 dark:text-slate-200 opacity-70">

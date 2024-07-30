@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
+import { createClient } from "@/lib/supaclient/server";
+import { BooksContentsCount } from "@/models";
 
 import BookList from "./components/book-list";
 import { MiniBookSelector } from "./components/mini-book-selector";
@@ -15,10 +17,17 @@ type BookListPageProps = {
 };
 
 const BookListLayout = async ({ children }: BookListPageProps) => {
-  // const supabase = createClient();
+  const supabase = createClient();
 
-  // const books = data;
-  const books: typeof dataDummy = dataDummy;
+  const { data, error } = await supabase
+    .from("books_contents_view")
+    .select("*");
+
+  if (error) {
+    throw error;
+  }
+
+  const books: BooksContentsCount[] = data;
 
   return (
     <div className="flex flex-col h-full">
@@ -56,7 +65,7 @@ const BookListLayout = async ({ children }: BookListPageProps) => {
               </Button>
             </div>
 
-            <BookList />
+            <BookList books={books} />
           </div>
         </div>
 

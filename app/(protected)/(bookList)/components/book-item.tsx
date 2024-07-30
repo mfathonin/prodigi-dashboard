@@ -1,15 +1,17 @@
+import { BooksContentsCount } from "@/models";
+
 import Link from "next/link";
 
 import { BookOptions } from "./book-options";
 
 export type BookItemProps = {
-  book: any;
+  book: BooksContentsCount;
 };
 
 export const BookItem = ({ book }: BookItemProps) => {
   return (
     <Link
-      href={`/${book.id}`}
+      href={`/${book.uuid}`}
       className="flex items-center group justify-between px-4 py-3 border-b last:border-0 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900"
     >
       <div className="flex items-center gap-2">
@@ -18,7 +20,7 @@ export const BookItem = ({ book }: BookItemProps) => {
             {book.title}
           </p>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            10 konten digital
+            {book.contents} konten digital
           </p>
         </div>
       </div>

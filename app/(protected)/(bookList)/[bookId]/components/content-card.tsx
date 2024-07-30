@@ -9,28 +9,30 @@ import {
 import { MenuItems } from "@/components/ui/menu-items";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes, getLinks } from "@/lib/utils";
+import { BookContentsLink, Books, ContentsLink } from "@/models";
 
-import { useParams } from "next/navigation";
 import { toCanvas } from "qrcode";
 import { useEffect, useRef } from "react";
 
 const { CANVAS_QR_PREFIX_ID } = constants;
 
-export const ContentCard = ({ content }: { content: any }) => {
-  const params = useParams();
-
-  // TODO: get real book data
-  const bookId = params.bookId as string;
-  const book: any = { id: bookId, title: "Book Title" };
-
+export const ContentCard = ({
+  book,
+  content,
+}: {
+  book: Books;
+  content: BookContentsLink;
+}) => {
   const qrCanvas = useRef<HTMLCanvasElement>(null);
 
+  const link = content.link as ContentsLink;
+
   useEffect(() => {
-    if (qrCanvas.current != null && content.link.url) {
-      const generatedUrl = getLinks(content.link.url);
+    if (qrCanvas.current != null && link.path) {
+      const generatedUrl = getLinks(link.path);
       toCanvas(qrCanvas.current, generatedUrl, { width: 160, margin: 2 });
     }
-  }, [qrCanvas, content.link.url]);
+  }, [qrCanvas, link.path]);
 
   return (
     <>
@@ -45,14 +47,14 @@ export const ContentCard = ({ content }: { content: any }) => {
           <div className="flex-1">
             <p className="text-sm">{content.title}</p>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 line-clamp-1">
-              {content.link.targetUrl}
+              {link.targetUrl}
             </p>
             <div className="hidden">
               <canvas
                 data-name={book.title + "-" + content.title}
-                id={CANVAS_QR_PREFIX_ID.concat(book.id, content.id)}
+                id={CANVAS_QR_PREFIX_ID.concat(book.uuid, content.uuid!)}
                 ref={qrCanvas}
-                className={CANVAS_QR_PREFIX_ID.concat(book.id)}
+                className={CANVAS_QR_PREFIX_ID.concat(book.uuid)}
               />
             </div>
           </div>
@@ -76,7 +78,7 @@ export const ContentCard = ({ content }: { content: any }) => {
                 if (qrCanvas.current)
                   downloadQRCodes({
                     canvas: qrCanvas.current,
-                    name: content.title,
+                    name: content.title!,
                   });
               }}
             />

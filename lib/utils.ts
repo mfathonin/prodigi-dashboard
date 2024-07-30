@@ -12,7 +12,7 @@ export const dummyDelay = async <T extends {}>(ms: number, data: T) => {
 };
 
 export const getPrefixLinks = () =>
-  (process.env.PUBLIC_LINKS_APP || location.origin) + "/links/";
+  (process.env.NEXT_PUBLIC_LINKS_APP || location.origin) + "/links/";
 
 export const getLinks = (text: string): string => {
   return new URL(text, getPrefixLinks()).href;

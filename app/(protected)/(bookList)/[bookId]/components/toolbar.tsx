@@ -4,32 +4,24 @@ import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes } from "@/lib/utils";
-
-import { useParams, useSearchParams } from "next/navigation";
+import { Books } from "@/models";
 
 const {
   CANVAS_QR_PREFIX_ID,
   searchParams: { CONTENT_QUERY },
 } = constants;
 
-export const Toolbar = () => {
-  const params = useParams();
-  const searchParams = useSearchParams();
-
-  // TODO: get real book data
-  const bookId = params.bookId as string;
-  const currentBook = { title: "Collection Name" + bookId, id: bookId };
-
+export const Toolbar = ({ book }: { book: Books }) => {
   const handleDownloadAllQR = () => {
     const canvases: NodeListOf<HTMLCanvasElement> =
       document.querySelectorAll<HTMLCanvasElement>(
-        "." + CANVAS_QR_PREFIX_ID.concat(currentBook.id)
+        "." + CANVAS_QR_PREFIX_ID.concat(book.uuid)
       );
     const QRData = Array.from(canvases).map((canvas) => ({
       canvas,
       name: canvas.getAttribute("data-name")!,
     }));
-    downloadQRCodes(QRData, currentBook.title);
+    downloadQRCodes(QRData, book.title);
   };
 
   return (

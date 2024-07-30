@@ -1,12 +1,10 @@
-import { constants } from "@/lib/constants";
+import { createClient } from "@/lib/supaclient/server";
 
 import { notFound } from "next/navigation";
 
 import { ContentCard } from "./components/content-card";
 import { NoContent } from "./components/no-content";
 import { NoMatchSearch } from "./components/no-match-search";
-
-const { books, contents: dummyContents } = constants;
 
 export default async function BookDetails({
   params,
@@ -16,15 +14,26 @@ export default async function BookDetails({
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
   const { bookId } = params;
-  const book = books.find((b) => b.id === bookId);
 
-  if (!book) return notFound();
+  const supabase = createClient();
+  const { data, error: errorFetchBooks } = await supabase
+    .from("books")
+    .select("*")
+    .eq("uuid", bookId)
+    .limit(1);
+  const { data: contents, error: errorFetchContent } = await supabase
+    .from("contents_link")
+    .select("*")
+    .eq("book_id", bookId);
 
-  const contents = parseInt(book.id ?? "1") % 2 === 0 ? dummyContents : [];
+  if (errorFetchBooks || errorFetchContent) return notFound();
 
+  const book = data[0];
   const serachQuery = searchParams["content"] as string;
-  const filteredContents = contents.filter((c) =>
-    c.title.toLowerCase().includes((serachQuery ?? "").toLowerCase())
+  const filteredContents = contents.filter(
+    (c) =>
+      c.title &&
+      c.title.toLowerCase().includes((serachQuery ?? "").toLowerCase())
   );
 
   if (contents.length === 0) return <NoContent />;
@@ -33,7 +42,7 @@ export default async function BookDetails({
   return (
     <div className="space-y-3 !mt-8">
       {filteredContents.map((contentData) => (
-        <ContentCard key={contentData.id} content={contentData} />
+        <ContentCard key={contentData.id} book={book} content={contentData} />
       ))}
     </div>
   );

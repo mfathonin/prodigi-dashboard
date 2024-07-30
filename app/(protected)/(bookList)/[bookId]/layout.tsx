@@ -1,4 +1,4 @@
-import { constants } from "@/lib/constants";
+import { createClient } from "@/lib/supaclient/server";
 
 import { Suspense } from "react";
 
@@ -13,11 +13,18 @@ export default async function BookDetailsLayout({
   params: { bookId: string };
 }) {
   const { bookId } = params;
-  const book = constants.books.find((b) => b.id === bookId);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("books")
+    .select("*")
+    .eq("uuid", bookId)
+    .limit(1);
 
-  if (!book) {
+  if (error) {
     return children;
   }
+
+  const book = data[0];
 
   return (
     <>
@@ -25,13 +32,13 @@ export default async function BookDetailsLayout({
         <p className="text-secondary-700-200-token opacity-70 text-xs">
           Detail Koleksi
         </p>
-        <h4 className="h4 font-semibold">{book?.title ?? "Book Title"}</h4>
+        <h4 className="h4 font-semibold">{book.title}</h4>
       </div>
       <Suspense fallback={<AttributesLoading />}>
-        <AttributesList bookId={book?.id ?? "1"} />
+        <AttributesList bookId={book.uuid} />
       </Suspense>
       {/* Toolbar: Search | Downloads All QR | Add */}
-      <Toolbar />
+      <Toolbar book={book} />
       <hr className="border-zinc-200 dark:border-zinc-700 mt-1" />
       {children}
     </>
