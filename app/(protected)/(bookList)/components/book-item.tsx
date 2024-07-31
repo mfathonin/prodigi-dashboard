@@ -24,7 +24,7 @@ export const BookItem = ({ book }: BookItemProps) => {
           </p>
         </div>
       </div>
-      <BookOptions />
+      <BookOptions book={book} />
     </Link>
   );
 };

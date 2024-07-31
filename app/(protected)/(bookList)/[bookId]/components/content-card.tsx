@@ -11,8 +11,11 @@ import { constants } from "@/lib/constants";
 import { downloadQRCodes, getLinks } from "@/lib/utils";
 import { BookContentsLink, Books, ContentsLink } from "@/models";
 
+import { useRouter } from "next/navigation";
 import { toCanvas } from "qrcode";
 import { useEffect, useRef } from "react";
+
+import { useDialog } from "../../dialog/provider";
 
 const { CANVAS_QR_PREFIX_ID } = constants;
 
@@ -23,6 +26,8 @@ export const ContentCard = ({
   book: Books;
   content: BookContentsLink;
 }) => {
+  const router = useRouter();
+  const dialog = useDialog();
   const qrCanvas = useRef<HTMLCanvasElement>(null);
 
   const link = content.link as ContentsLink;
@@ -86,7 +91,20 @@ export const ContentCard = ({
               icon="bx bx-trash"
               label="Hapus konten"
               onClick={() => {
-                // openDeleteConfirmationModal();
+                if (dialog) {
+                  dialog.openDialog("alert", content, async (result) => {
+                    if (typeof result === "boolean" && result) {
+                      const supabase = (
+                        await import("@/lib/supaclient/client")
+                      ).createClient();
+                      await supabase
+                        .from("contents")
+                        .delete()
+                        .match({ id: content.id });
+                    }
+                    router.refresh();
+                  });
+                }
               }}
             />
           </DropdownMenuContent>

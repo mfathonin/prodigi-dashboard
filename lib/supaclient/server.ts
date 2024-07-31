@@ -7,8 +7,8 @@ export function createClient() {
   const cookieStore = cookies();
 
   return createServerClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_KEY!,
     {
       cookies: {
         getAll() {

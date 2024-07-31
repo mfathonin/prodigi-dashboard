@@ -8,10 +8,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MenuItems } from "@/components/ui/menu-items";
 import { cn } from "@/lib/utils";
+import { BooksContentsCount } from "@/models";
 
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
-export const BookOptions = () => {
+import { useDialog } from "../dialog/provider";
+
+export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
+  const path = usePathname();
+  const router = useRouter();
+  const dialog = useDialog();
+
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
@@ -37,7 +45,29 @@ export const BookOptions = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-11">
         <MenuItems icon="bx bx-edit" label="Ubah buku" />
-        <MenuItems icon="bx bx-trash" label="Hapus buku" />
+        <MenuItems
+          onClick={() => {
+            if (dialog) {
+              dialog.openDialog("alert", book, async (result) => {
+                if (typeof result === "boolean" && result) {
+                  const supabase = (
+                    await import("@/lib/supaclient/client")
+                  ).createClient();
+
+                  await supabase.from("books").delete().match({ id: book.id });
+
+                  router.refresh();
+
+                  if (path.includes(book.uuid!)) {
+                    router.replace("/");
+                  }
+                }
+              });
+            }
+          }}
+          icon="bx bx-trash"
+          label="Hapus buku"
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

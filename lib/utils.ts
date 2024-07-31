@@ -7,6 +7,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const capitalize = (text: string) =>
+  text.charAt(0).toUpperCase() + text.slice(1);
+
 export const dummyDelay = async <T extends {}>(ms: number, data: T) => {
   return new Promise<T>((resolve) => setTimeout(() => resolve(data), ms));
 };

@@ -15,12 +15,12 @@ export default async function BookDetailsLayout({
   const { bookId } = params;
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("books")
+    .from("books_contents_view")
     .select("*")
     .eq("uuid", bookId)
     .limit(1);
 
-  if (error) {
+  if (error || data.length === 0) {
     return children;
   }
 
@@ -35,7 +35,7 @@ export default async function BookDetailsLayout({
         <h4 className="h4 font-semibold">{book.title}</h4>
       </div>
       <Suspense fallback={<AttributesLoading />}>
-        <AttributesList bookId={book.uuid} />
+        <AttributesList bookId={book.uuid!} />
       </Suspense>
       {/* Toolbar: Search | Downloads All QR | Add */}
       <Toolbar book={book} />
