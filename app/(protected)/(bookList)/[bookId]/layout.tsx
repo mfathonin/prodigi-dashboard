@@ -16,6 +16,8 @@ export default async function BookDetailsLayout({
   const supabase = createClient();
   const booksRepo = new BookRepository(supabase);
 
+  if (bookId == null || bookId === "") return children;
+
   let book = await booksRepo.getBook(bookId).catch((error) => {
     console.error("[bookId]", "[Layout error]", error);
     return notFound();
