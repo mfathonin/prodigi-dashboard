@@ -1,7 +1,10 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BooksContentsCount } from "@/models";
-
 import Link from "next/link";
-
 import { BookOptions } from "./book-options";
 
 export type BookItemProps = {
@@ -16,9 +19,16 @@ export const BookItem = ({ book }: BookItemProps) => {
     >
       <div className="flex items-center gap-2">
         <div className="flex flex-col">
-          <p className="text-sm text-slate-900 dark:text-slate-100">
-            {book.title}
-          </p>
+          <Tooltip>
+            <TooltipTrigger>
+              <p className="text-sm text-slate-900 dark:text-slate-100 line-clamp-1 text-ellipsis text-start">
+                {book.title}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{book.title}</p>
+            </TooltipContent>
+          </Tooltip>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
             {book.contents} konten digital
           </p>

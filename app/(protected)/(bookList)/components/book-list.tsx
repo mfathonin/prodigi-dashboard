@@ -1,10 +1,9 @@
 "use client";
 
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { constants } from "@/lib/constants";
 import { BooksContentsCount } from "@/models";
-
 import { useSearchParams } from "next/navigation";
-
 import { BookItem } from "./book-item";
 import NoBook from "./no-book";
 
@@ -27,9 +26,11 @@ export default function BookList({ books }: { books: BooksContentsCount[] }) {
   return (
     <div className="rounded-md bg-background w-full overflow-hidden">
       <div className="max-h-[calc(70dvh-148px)] overflow-y-auto">
-        {filteredBooks.map((book) => (
-          <BookItem key={book.id} book={book} />
-        ))}
+        <TooltipProvider>
+          {filteredBooks.map((book) => (
+            <BookItem key={book.id} book={book} />
+          ))}
+        </TooltipProvider>
       </div>
     </div>
   );

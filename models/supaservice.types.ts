@@ -37,7 +37,7 @@ export type Database = {
           firestore_id: string | null
           id: number
           title: string
-          updated_at: string
+          updated_at: string | null
           uuid: string
         }
         Insert: {
@@ -46,7 +46,7 @@ export type Database = {
           firestore_id?: string | null
           id?: number
           title: string
-          updated_at: string
+          updated_at?: string | null
           uuid?: string
         }
         Update: {
@@ -55,7 +55,7 @@ export type Database = {
           firestore_id?: string | null
           id?: number
           title?: string
-          updated_at?: string
+          updated_at?: string | null
           uuid?: string
         }
         Relationships: []
@@ -116,7 +116,7 @@ export type Database = {
           id: number
           link_id: string
           title: string
-          updated_at: string
+          updated_at: string | null
           uuid: string
         }
         Insert: {
@@ -127,7 +127,7 @@ export type Database = {
           id?: number
           link_id: string
           title: string
-          updated_at: string
+          updated_at?: string | null
           uuid?: string
         }
         Update: {
@@ -138,7 +138,7 @@ export type Database = {
           id?: number
           link_id?: string
           title?: string
-          updated_at?: string
+          updated_at?: string | null
           uuid?: string
         }
         Relationships: [

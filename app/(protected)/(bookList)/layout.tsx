@@ -1,17 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { SearchBox } from "@/components/ui/search-box";
-import { constants } from "@/lib/constants";
 import { createClient } from "@/lib/supaclient/server";
-import { BooksContentsCount } from "@/models";
-
+import { BookRepository } from "@/repositories/books";
 import BookList from "./components/book-list";
 import { MiniBookSelector } from "./components/mini-book-selector";
+import { Toolbar } from "./components/toolbar";
 import { DialogProvider } from "./dialog/provider";
-
-const {
-  books: dataDummy,
-  searchParams: { BOOK_QUERY },
-} = constants;
 
 type BookListPageProps = {
   children: React.ReactNode;
@@ -20,15 +12,8 @@ type BookListPageProps = {
 const BookListLayout = async ({ children }: BookListPageProps) => {
   const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("books_contents_view")
-    .select("*");
-
-  if (error) {
-    throw error;
-  }
-
-  const books: BooksContentsCount[] = data;
+  const bookRepo = new BookRepository(supabase);
+  let books = await bookRepo.getBooks();
 
   return (
     <DialogProvider>
@@ -52,20 +37,7 @@ const BookListLayout = async ({ children }: BookListPageProps) => {
               <p className="text-sm text-zinc-700 dark:text-zinc-200 opacity-70 mb-3">
                 Kelola konten digital untuk koleksi anda dengan mudah
               </p>
-              {/* Toolbar */}
-              <div className="flex gap-2 mb-6">
-                <SearchBox searchKey={BOOK_QUERY} placeholder="Cari buku" />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full flex-shrink-0"
-                >
-                  <i className="bx bx-filter-alt text-sm md:text-lg text-primary-500-400-token" />
-                </Button>
-                <Button size="icon" className="rounded-full flex-shrink-0">
-                  <i className="bx bx-plus text-sm md:text-lg" />
-                </Button>
-              </div>
+              <Toolbar />
 
               <BookList books={books} />
             </div>

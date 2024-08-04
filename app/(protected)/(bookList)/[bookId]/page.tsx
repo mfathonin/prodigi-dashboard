@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supaclient/server";
-
-import { notFound } from "next/navigation";
-
+import { BookRepository } from "@/repositories/books";
+import { ContentsRepository } from "@/repositories/contents";
 import { ContentCard } from "./components/content-card";
 import { NoContent } from "./components/no-content";
 import { NoMatchSearch } from "./components/no-match-search";
@@ -16,19 +15,11 @@ export default async function BookDetails({
   const { bookId } = params;
 
   const supabase = createClient();
-  const { data, error: errorFetchBooks } = await supabase
-    .from("books")
-    .select("*")
-    .eq("uuid", bookId)
-    .limit(1);
-  const { data: contents, error: errorFetchContent } = await supabase
-    .from("contents_link")
-    .select("*")
-    .eq("book_id", bookId);
+  const bookRepo = new BookRepository(supabase);
+  const contentRepo = new ContentsRepository(supabase);
+  const book = await bookRepo.getBook(bookId);
+  const contents = await contentRepo.getBookContents(bookId);
 
-  if (errorFetchBooks || errorFetchContent) return notFound();
-
-  const book = data[0];
   const serachQuery = searchParams["content"] as string;
   const filteredContents = contents.filter(
     (c) =>

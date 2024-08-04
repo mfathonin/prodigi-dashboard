@@ -11,18 +11,25 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { capitalize } from "@/lib/utils";
-import { BookContentsLink, BooksContentsCount } from "@/models";
-
+import { BookContentsLink, BookUpdateForm } from "@/models";
 import { createContext, useContext, useState } from "react";
+import { BookForm } from "./books-form";
 
-type HanledDialogDataType = BooksContentsCount | BookContentsLink;
+type HanledDialogDataType = BookUpdateForm | BookContentsLink;
 
 export type DialogAction = {
   openDialog: <TData extends HanledDialogDataType>(
     type: "alert" | "form",
     data: TData,
-    onClose: (data?: HanledDialogDataType | boolean) => void
+    onClose: (data?: TData | boolean) => void
   ) => void;
 };
 
@@ -39,7 +46,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
   const openDialog = <TData extends HanledDialogDataType>(
     type: "alert" | "form",
     data: TData,
-    onClose: (data?: HanledDialogDataType | boolean) => void
+    onClose: (data?: TData | boolean) => Promise<void> | void
   ) => {
     setDialogType(type);
     setDialogData(data);
@@ -47,8 +54,8 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
     setIsOpen(true);
   };
 
-  const isBooks = (data: HanledDialogDataType): data is BooksContentsCount => {
-    return (data as BooksContentsCount).contents !== undefined;
+  const isBooks = (data: HanledDialogDataType): data is BookUpdateForm => {
+    return !Object.hasOwn(data, "book_id");
   };
 
   const alertTitle =
@@ -56,9 +63,14 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
       ? "buku"
       : "konten";
 
-  const handleCloseAlert = async (result: boolean) => {
+  const dialogTitle =
+    dialogData && dialogType === "form" && isBooks(dialogData)
+      ? "buku"
+      : "konten";
+
+  const handleCloseDialog = async (result: HanledDialogDataType | boolean) => {
     setIsLoading(true);
-    onCloseFn && (await onCloseFn(result));
+    if (onCloseFn !== undefined) await onCloseFn(result);
     setIsOpen(false);
     setIsLoading(false);
   };
@@ -76,20 +88,17 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
                 <span className="py-1 px-2 bg-zinc-100 dark:bg-zinc-900 block w-full mt-2 rounded">
                   {capitalize(alertTitle)}:{" "}
                   <span className="font-semibold">
-                    {
-                      (dialogData as BookContentsLink | BooksContentsCount)
-                        .title
-                    }
+                    {(dialogData as BookContentsLink | BookUpdateForm).title}
                   </span>
                 </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => handleCloseAlert(false)}>
+              <AlertDialogCancel onClick={() => handleCloseDialog(false)}>
                 Batal
               </AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => handleCloseAlert(true)}
+                onClick={() => handleCloseDialog(true)}
                 className={buttonVariants({
                   variant: "destructive",
                   size: "sm",
@@ -103,6 +112,41 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      )}
+      {dialogData && dialogType === "form" && (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{capitalize(dialogTitle)}</DialogTitle>
+              <DialogDescription>
+                Tambah atau ubah {dialogTitle} kamu disini.
+              </DialogDescription>
+            </DialogHeader>
+            {isBooks(dialogData) ? (
+              <BookForm
+                loadingState={isLoading}
+                book={{
+                  title: dialogData.title ?? "",
+                  uuid: dialogData.uuid ?? "",
+                  id: dialogData.id ?? 0,
+                }}
+                onClose={() => setIsOpen(false)}
+                onSaved={async (data) => {
+                  try {
+                    await handleCloseDialog(data as BookUpdateForm);
+                  } catch (error) {
+                    console.error(error);
+                    throw error;
+                  }
+                }}
+              />
+            ) : (
+              <div>
+                <h1>{(dialogData as BookContentsLink).title}</h1>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       )}
       {children}
     </DialogContext.Provider>

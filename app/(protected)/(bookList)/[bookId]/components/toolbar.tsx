@@ -5,7 +5,6 @@ import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes } from "@/lib/utils";
 import { BooksContentsCount } from "@/models";
-
 import { useParams } from "next/navigation";
 
 const {
@@ -33,7 +32,7 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
       <Button
         className="rounded-full flex gap-1 size-9 lg:size-fit"
         variant="secondary"
-        disabled={book.contents! === 0}
+        disabled={book.contents === 0}
         onClick={handleDownloadAllQR}
       >
         <i className="bx bx-cloud-download text-lg" />

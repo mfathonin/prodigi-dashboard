@@ -14,6 +14,25 @@ export const constants = {
     SORT_BY: "sortBy",
     ORDER_BY: "orderBy",
   } as const,
+  EMPTY_BOOK_TEMPLATE: {
+    title: "",
+    uuid: "",
+    id: -1,
+    created_at: "",
+    updated_at: null,
+    deleted_at: null,
+    firestore_id: null,
+  },
+  EMPTY_CONTENT_TEMPLATE: {
+    title: "",
+    uuid: "",
+    book_id: "",
+    id: -1,
+    created_at: "",
+    updated_at: null,
+    deleted_at: null,
+    firestore_id: null,
+  },
   // Dummy data
   books: [
     {

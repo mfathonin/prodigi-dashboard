@@ -1,15 +1,10 @@
 import { createClient } from "@/lib/supaclient/server";
+import { AttributesRepository } from "@/repositories/attributes";
 
 export const AttributesList = async ({ bookId }: { bookId: string }) => {
   const supabase = createClient();
-  const { data: attributes, error } = await supabase
-    .from("books_attributes_view")
-    .select("*")
-    .eq("book_id", bookId);
-
-  if (error) {
-    throw error;
-  }
+  const attributeRepo = new AttributesRepository(supabase);
+  const attributes = await attributeRepo.getBookAttributes(bookId);
 
   return (
     <>
@@ -19,7 +14,7 @@ export const AttributesList = async ({ bookId }: { bookId: string }) => {
             <tbody>
               {attributes.map((attr) => (
                 <tr
-                  key={attr.attribute_id}
+                  key={attr.uuid}
                   className="table-row !border-transparent !bg-transparent"
                 >
                   <td className="table-cell !py-1 !px-0 w-1/2 md:w-1/5 lg:w-2/12 text-slate-700 dark:text-slate-200 opacity-70">

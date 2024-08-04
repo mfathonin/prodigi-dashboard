@@ -10,11 +10,10 @@ import { MenuItems } from "@/components/ui/menu-items";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes, getLinks } from "@/lib/utils";
 import { BookContentsLink, Books, ContentsLink } from "@/models";
-
+import { ContentsRepository } from "@/repositories/contents";
 import { useRouter } from "next/navigation";
 import { toCanvas } from "qrcode";
 import { useEffect, useRef } from "react";
-
 import { useDialog } from "../../dialog/provider";
 
 const { CANVAS_QR_PREFIX_ID } = constants;
@@ -31,6 +30,8 @@ export const ContentCard = ({
   const qrCanvas = useRef<HTMLCanvasElement>(null);
 
   const link = content.link as ContentsLink;
+
+  if (!link) throw new Error("Link is not defined");
 
   useEffect(() => {
     if (qrCanvas.current != null && link.path) {
@@ -97,12 +98,13 @@ export const ContentCard = ({
                       const supabase = (
                         await import("@/lib/supaclient/client")
                       ).createClient();
-                      await supabase
-                        .from("contents")
-                        .delete()
-                        .match({ id: content.id });
+
+                      await new ContentsRepository(supabase).deleteContentsLink(
+                        content.uuid
+                      );
+
+                      router.refresh();
                     }
-                    router.refresh();
                   });
                 }
               }}
