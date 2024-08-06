@@ -1,4 +1,4 @@
-import { Database, Tables } from "@/models";
+import { ContentUpdateForm, Database, Tables } from "@/models";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 type BookContentsLink = Tables<"contents"> & {
@@ -11,7 +11,7 @@ type BookContentsLink = Tables<"contents"> & {
 
 interface Contents {
   getBookContents(bookId: string): Promise<BookContentsLink[]>;
-  upsertContentLink(contents: BookContentsLink): Promise<BookContentsLink>;
+  upsertContentLink(contents: ContentUpdateForm): Promise<BookContentsLink>;
   deleteContentsLink(contentId: string): Promise<void>;
 }
 
@@ -31,7 +31,8 @@ export class ContentsRepository implements Contents {
       link (id, path, targetUrl: target_url)
     `
       )
-      .eq("book_id", bookId);
+      .eq("book_id", bookId)
+      .order("title", { ascending: true });
     if (response.error) throw response.error;
 
     const contents = response.data;
@@ -39,23 +40,34 @@ export class ContentsRepository implements Contents {
   }
 
   async upsertContentLink(
-    _content: BookContentsLink
+    _content: ContentUpdateForm
   ): Promise<BookContentsLink> {
-    const { link, ...content } = _content;
-    let updatedLink: BookContentsLink["link"];
-    if (link) {
-      const updateLinkResponse = await this._db
-        .from("link")
-        .upsert({ target_url: link.targetUrl, ...link })
-        .select(`id, path, targetUrl: target_url`)
-        .single();
-      if (updateLinkResponse.error) throw updateLinkResponse;
-      updatedLink = updateLinkResponse.data;
-    }
+    const { path, targetUrl, linkId, ...content } = _content;
+    const link = {
+      path,
+      target_url: targetUrl,
+      id: linkId !== -1 ? linkId : undefined,
+    };
+    let updatedLink: BookContentsLink["link"] & { uuid: string };
+    const updateLinkResponse = await this._db
+      .from("link")
+      .upsert(link)
+      .select(`id, path, targetUrl: target_url, uuid`)
+      .single();
+    if (updateLinkResponse.error) throw updateLinkResponse;
+    updatedLink = updateLinkResponse.data;
+
+    const contentWithLink = {
+      title: content.title,
+      id: content.id !== -1 ? content.id : undefined,
+      uuid: content.uuid !== "" ? content.uuid : undefined,
+      link_id: updatedLink?.uuid,
+      book_id: content.bookId,
+    };
 
     const response = await this._db
       .from("contents")
-      .upsert(content)
+      .upsert(contentWithLink)
       .select(
         `
       *,

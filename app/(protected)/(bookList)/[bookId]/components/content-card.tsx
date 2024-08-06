@@ -9,7 +9,12 @@ import {
 import { MenuItems } from "@/components/ui/menu-items";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes, getLinks } from "@/lib/utils";
-import { BookContentsLink, Books, ContentsLink } from "@/models";
+import {
+  BookContentsLink,
+  Books,
+  ContentsLink,
+  ContentUpdateForm,
+} from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
 import { useRouter } from "next/navigation";
 import { toCanvas } from "qrcode";
@@ -40,14 +45,39 @@ export const ContentCard = ({
     }
   }, [qrCanvas, link.path]);
 
+  const handleUpdateContent = async () => {
+    const _content: ContentUpdateForm = {
+      bookId: book.uuid,
+      title: content.title,
+      targetUrl: link.targetUrl,
+      path: link.path,
+      linkId: link.id,
+      id: content.id,
+      uuid: content.uuid,
+    };
+
+    dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
+      if (result) {
+        const supabase = (
+          await import("@/lib/supaclient/client")
+        ).createClient();
+
+        // console.log("on update content link", { result });
+        await new ContentsRepository(supabase).upsertContentLink(
+          result as ContentUpdateForm
+        );
+
+        router.refresh();
+      }
+    });
+  };
+
   return (
     <>
       <div
         role="button"
         className="flex gap-10 items-start md:items-center justify-between rounded-lg p-4 w-full border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 cursor-pointer"
-        onClick={() => {
-          /* openContentDetail(content.id) */
-        }}
+        onClick={() => handleUpdateContent()}
       >
         <div className="flex flex-col w-full md:flex-row gap-x-10 gap-y-3">
           <div className="flex-1">
@@ -76,7 +106,11 @@ export const ContentCard = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-14">
-            <MenuItems icon="bx bx-edit" label="Edit konten" />
+            <MenuItems
+              onClick={handleUpdateContent}
+              icon="bx bx-edit"
+              label="Edit konten"
+            />
             <MenuItems
               icon="bx bx-export"
               label="Download QR Code"

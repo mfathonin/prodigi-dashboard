@@ -19,18 +19,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { capitalize } from "@/lib/utils";
-import { BookContentsLink, BookUpdateForm } from "@/models";
+import { BookUpdateForm, ContentUpdateForm } from "@/models";
 import { createContext, useContext, useState } from "react";
 import { BookForm } from "./books-form";
+import { ContentForm } from "./content-form";
 
-type HanledDialogDataType = BookUpdateForm | BookContentsLink;
+type HanledDialogDataType = BookUpdateForm | ContentUpdateForm;
 
 export type DialogAction = {
   openDialog: <TData extends HanledDialogDataType>(
     type: "alert" | "form",
     data: TData,
     onClose: (data?: TData | boolean) => void
-  ) => void;
+  ) => void | Promise<void>;
 };
 
 const DialogContext = createContext<DialogAction | null>(null);
@@ -55,7 +56,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isBooks = (data: HanledDialogDataType): data is BookUpdateForm => {
-    return !Object.hasOwn(data, "book_id");
+    return !Object.hasOwn(data, "bookId");
   };
 
   const alertTitle =
@@ -88,7 +89,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
                 <span className="py-1 px-2 bg-zinc-100 dark:bg-zinc-900 block w-full mt-2 rounded">
                   {capitalize(alertTitle)}:{" "}
                   <span className="font-semibold">
-                    {(dialogData as BookContentsLink | BookUpdateForm).title}
+                    {(dialogData as ContentUpdateForm | BookUpdateForm).title}
                   </span>
                 </span>
               </AlertDialogDescription>
@@ -115,7 +116,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
       )}
       {dialogData && dialogType === "form" && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent>
+          <DialogContent className="w-[70dvw] max-w-3xl">
             <DialogHeader>
               <DialogTitle>{capitalize(dialogTitle)}</DialogTitle>
               <DialogDescription>
@@ -141,9 +142,19 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
                 }}
               />
             ) : (
-              <div>
-                <h1>{(dialogData as BookContentsLink).title}</h1>
-              </div>
+              <ContentForm
+                loadingState={isLoading}
+                content={dialogData as ContentUpdateForm}
+                onClose={() => setIsOpen(false)}
+                onSaved={async (data) => {
+                  try {
+                    await handleCloseDialog(data as ContentUpdateForm);
+                  } catch (error) {
+                    console.error(error);
+                    throw error;
+                  }
+                }}
+              />
             )}
           </DialogContent>
         </Dialog>
