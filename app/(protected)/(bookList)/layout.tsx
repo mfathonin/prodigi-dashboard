@@ -1,5 +1,3 @@
-import { createClient } from "@/lib/supaclient/server";
-import { BookRepository } from "@/repositories/books";
 import BookList from "./components/book-list";
 import { MiniBookSelector } from "./components/mini-book-selector";
 import { Toolbar } from "./components/toolbar";
@@ -10,11 +8,6 @@ type BookListPageProps = {
 };
 
 const BookListLayout = async ({ children }: BookListPageProps) => {
-  const supabase = createClient();
-
-  const bookRepo = new BookRepository(supabase);
-  let books = await bookRepo.getBooks();
-
   return (
     <DialogProvider>
       <div className="flex flex-col h-full">
@@ -39,14 +32,14 @@ const BookListLayout = async ({ children }: BookListPageProps) => {
               </p>
               <Toolbar />
 
-              <BookList books={books} />
+              <BookList />
             </div>
           </div>
 
           {/* Mini book selector */}
           <div className="w-full flex flex-col gap-y-2 md:hidden sticky top-[68px] z-[1] bg-background">
             <h2>Pilih buku</h2>
-            <MiniBookSelector books={books} />
+            <MiniBookSelector />
           </div>
 
           {/* Book details and digital content list */}

@@ -2,6 +2,7 @@ import { AttributesRepository } from "@/repositories/attributes";
 
 export * from "./books";
 export * from "./contents";
+export * from "./filter-sort";
 export * from "./results";
 export * from "./supaservice.types";
 export * from "./users";

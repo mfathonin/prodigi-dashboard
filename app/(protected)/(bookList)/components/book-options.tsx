@@ -17,7 +17,13 @@ import React from "react";
 import { toast } from "sonner";
 import { useDialog } from "../dialog/provider";
 
-export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
+export const BookOptions = ({
+  book,
+  onAnyUpdate,
+}: {
+  book: BooksContentsCount;
+  onAnyUpdate?: () => void;
+}) => {
   const supabase = createClient();
   const bookRepo = new BookRepository(supabase);
 
@@ -86,6 +92,7 @@ export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
                         description: `Buku "${_bookData.title}" berhasil disimpan!`,
                       });
                       router.refresh();
+                      onAnyUpdate && onAnyUpdate();
                     } catch (error) {
                       console.error(error);
                       toast("Gagal Menyimpan 🚨", {
@@ -113,6 +120,8 @@ export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
                     router.replace("/");
                     router.refresh();
                   }
+
+                  onAnyUpdate && onAnyUpdate();
                 }
               });
             }

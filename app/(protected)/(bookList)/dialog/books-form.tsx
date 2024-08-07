@@ -10,13 +10,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { createClient } from "@/lib/supaclient/client";
 import {
   AttritbutesList,
@@ -28,6 +21,7 @@ import { AttributesRepository } from "@/repositories/attributes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { AttributeSelector } from "./components/attribute-selector";
 
 type BookFormProps = {
   book: Partial<Books>;
@@ -143,42 +137,7 @@ export const BookForm = ({
                     </Button>
                   </div>
                 </FormLabel>
-                <FormMessage />
-
-                {field.value &&
-                  field.value.length > 0 &&
-                  field.value.map((value, index) => {
-                    if (!attributes) return null;
-                    const fieldValues = field.value;
-                    if (!fieldValues) return null;
-
-                    return (
-                      <div key={index} className="flex gap-2">
-                        <AttributeSelector
-                          attributes={attributes}
-                          value={value}
-                          onSelect={(uuid) => {
-                            const newAttributes = [...fieldValues];
-                            newAttributes[index] = uuid ?? "";
-                            field.onChange(newAttributes);
-                          }}
-                        />
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            const newAttributes = [...fieldValues];
-                            newAttributes.splice(index, 1);
-                            field.onChange(newAttributes);
-                          }}
-                        >
-                          <i className="bx bx-trash" />
-                        </Button>
-                      </div>
-                    );
-                  })}
+                <AttributeSelector field={{ ...field }} />
               </FormItem>
             )}
           />
@@ -207,101 +166,6 @@ export const BookForm = ({
           )}
         </Button>
       </div>
-    </div>
-  );
-};
-
-const AttributeSelector = ({
-  attributes,
-  value: selectedUUID,
-  onSelect,
-}: {
-  attributes: AttritbutesList;
-  value?: string;
-  onSelect: (uuid?: string) => void;
-}) => {
-  const attributeKeys = useMemo(
-    () => Object.keys(attributes).sort(),
-    [attributes]
-  );
-  const initialKey =
-    attributeKeys.find((key) =>
-      attributes[key].find((attr) => attr.uuid === selectedUUID)
-    ) ?? "";
-
-  const [selectedKey, setSelectedKey] = useState<string>(initialKey);
-  const [selectedValue, setSelectedValue] = useState<string | undefined>(
-    selectedUUID
-  );
-
-  const listAttributToSelect = useMemo(() => {
-    if (!selectedKey) return [];
-    return attributes[selectedKey].sort((a, b) =>
-      a.value.localeCompare(b.value)
-    );
-  }, [selectedKey, attributes]);
-
-  useEffect(() => {
-    setSelectedKey(initialKey);
-    setSelectedValue(selectedUUID);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUUID]);
-
-  return (
-    <div key={selectedKey ?? ""} className="flex gap-2 w-full">
-      <Select
-        value={selectedKey}
-        onValueChange={(key) => {
-          setSelectedKey(key);
-          setSelectedValue("");
-        }}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={"Pilih satu atribut"}>
-            {selectedKey}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {attributeKeys.map((key) => (
-            <SelectItem
-              key={key}
-              value={key}
-              onSelect={() => {
-                setSelectedKey(key);
-              }}
-            >
-              {key}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={selectedValue}
-        onValueChange={(uuid) => {
-          onSelect(uuid);
-          setSelectedValue(uuid);
-        }}
-        disabled={!selectedKey}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={"Pilih salah satu"}>
-            {listAttributToSelect.find((a) => a.uuid === selectedValue)?.value}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {listAttributToSelect.map((attr) => (
-            <SelectItem
-              key={attr.uuid}
-              value={attr.uuid}
-              onSelect={() => {
-                setSelectedValue(attr.uuid);
-              }}
-            >
-              {attr.value}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 };

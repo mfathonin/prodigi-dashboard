@@ -45,6 +45,30 @@ export const ContentCard = ({
     }
   }, [qrCanvas, link.path]);
 
+  const handleDeleteContent = async () => {
+    const _content: ContentUpdateForm = {
+      bookId: book.uuid,
+      title: content.title,
+      targetUrl: link.targetUrl,
+      path: link.path,
+      linkId: link.id,
+      id: content.id,
+      uuid: content.uuid,
+    };
+
+    dialog?.openDialog("alert", _content, async (result) => {
+      if (typeof result === "boolean" && result) {
+        const supabase = (
+          await import("@/lib/supaclient/client")
+        ).createClient();
+
+        await new ContentsRepository(supabase).deleteContentsLink(content.uuid);
+
+        router.refresh();
+      }
+    });
+  };
+
   const handleUpdateContent = async () => {
     const _content: ContentUpdateForm = {
       bookId: book.uuid,
@@ -125,23 +149,7 @@ export const ContentCard = ({
             <MenuItems
               icon="bx bx-trash"
               label="Hapus konten"
-              onClick={() => {
-                if (dialog) {
-                  dialog.openDialog("alert", content, async (result) => {
-                    if (typeof result === "boolean" && result) {
-                      const supabase = (
-                        await import("@/lib/supaclient/client")
-                      ).createClient();
-
-                      await new ContentsRepository(supabase).deleteContentsLink(
-                        content.uuid
-                      );
-
-                      router.refresh();
-                    }
-                  });
-                }
-              }}
+              onClick={handleDeleteContent}
             />
           </DropdownMenuContent>
         </DropdownMenu>

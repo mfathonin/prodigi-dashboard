@@ -19,12 +19,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { capitalize } from "@/lib/utils";
-import { BookUpdateForm, ContentUpdateForm } from "@/models";
+import { BookUpdateForm, ContentUpdateForm, FilterSort } from "@/models";
 import { createContext, useContext, useState } from "react";
 import { BookForm } from "./books-form";
 import { ContentForm } from "./content-form";
+import { FilterSortForm } from "./filter-sort-form";
 
-type HanledDialogDataType = BookUpdateForm | ContentUpdateForm;
+type HanledDialogDataType = BookUpdateForm | ContentUpdateForm | FilterSort;
 
 export type DialogAction = {
   openDialog: <TData extends HanledDialogDataType>(
@@ -57,6 +58,10 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isBooks = (data: HanledDialogDataType): data is BookUpdateForm => {
     return !Object.hasOwn(data, "bookId");
+  };
+
+  const isFilterSort = (data: HanledDialogDataType): data is FilterSort => {
+    return Object.hasOwn(data, "filter");
   };
 
   const alertTitle =
@@ -117,13 +122,36 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
       {dialogData && dialogType === "form" && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent className="w-[70dvw] max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{capitalize(dialogTitle)}</DialogTitle>
-              <DialogDescription>
-                Tambah atau ubah {dialogTitle} kamu disini.
-              </DialogDescription>
-            </DialogHeader>
-            {isBooks(dialogData) ? (
+            {isFilterSort(dialogData) ? (
+              <DialogHeader>
+                <DialogTitle>Filter dan Sortir</DialogTitle>
+                <DialogDescription>
+                  Atur filter dan sortir untuk menemukan buku yang kamu cari.
+                </DialogDescription>
+              </DialogHeader>
+            ) : (
+              <DialogHeader>
+                <DialogTitle>{capitalize(dialogTitle)}</DialogTitle>
+                <DialogDescription>
+                  Tambah atau ubah {dialogTitle} kamu disini.
+                </DialogDescription>
+              </DialogHeader>
+            )}
+            {isFilterSort(dialogData) ? (
+              <FilterSortForm
+                value={dialogData as FilterSort}
+                loadingState={isLoading}
+                onClose={() => setIsOpen(false)}
+                onSaved={async (data) => {
+                  try {
+                    await handleCloseDialog(data as FilterSort);
+                  } catch (error) {
+                    console.error(error);
+                    throw error;
+                  }
+                }}
+              />
+            ) : isBooks(dialogData) ? (
               <BookForm
                 loadingState={isLoading}
                 book={{

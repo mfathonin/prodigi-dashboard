@@ -13,6 +13,7 @@ export const constants = {
   searchParams: {
     BOOK_QUERY: "book",
     CONTENT_QUERY: "content",
+    FILTER: "filter",
     SORT_BY: "sortBy",
     ORDER_BY: "orderBy",
   } as const,
@@ -30,5 +31,4 @@ export const constants = {
     id: -1,
     uuid: "",
   } satisfies ContentUpdateForm,
-  // Dummy data
 };
