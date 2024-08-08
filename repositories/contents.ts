@@ -13,6 +13,7 @@ interface Contents {
   getBookContents(bookId: string): Promise<BookContentsLink[]>;
   upsertContentLink(contents: ContentUpdateForm): Promise<BookContentsLink>;
   deleteContentsLink(contentId: string): Promise<void>;
+  getContentByLink(path: string): Promise<BookContentsLink>;
 }
 
 export class ContentsRepository implements Contents {
@@ -83,5 +84,24 @@ export class ContentsRepository implements Contents {
 
   async deleteContentsLink(contentId: string): Promise<void> {
     await this._db.from("contents").delete().eq("uuid", contentId);
+  }
+
+  async getContentByLink(path: string): Promise<BookContentsLink> {
+    const response = await this._db.from("link").select("*").eq("path", path).single();
+    if (response.error) throw response.error;
+    const links = response.data;
+
+    const contentResponse = await this._db.from("contents").select("*").eq("link_id", links.uuid).single();
+    if (contentResponse.error) throw contentResponse.error;
+
+    const data: BookContentsLink = {
+      ...contentResponse.data,
+      link: {
+        ...links,
+        targetUrl: links.target_url
+      },
+    };
+
+    return data;
   }
 }
