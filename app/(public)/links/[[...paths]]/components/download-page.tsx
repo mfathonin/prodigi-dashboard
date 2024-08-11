@@ -3,7 +3,7 @@ import { DownloadButton } from "./download-button";
 
 export const DownloadPage = ({ message }: { message?: string }) => {
   return (
-    <div className="p-20 container max-w-screen-sm h-svh gap-10 flex flex-col justify-center items-center">
+    <div className="py-20 container max-w-sm h-svh gap-10 flex flex-col justify-center items-center">
       <Image
         src={"/logo.png"}
         alt="Prodigi Logo"

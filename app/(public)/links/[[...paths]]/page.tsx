@@ -29,7 +29,7 @@ export default async function LinkPage({
     if (!contentWithLink.link?.targetUrl) throw new Error("Link gagal dimuat");
 
     return (
-      <div className="container max-w-screen-sm h-svh flex flex-col gap-14 justify-center items-center">
+      <div className="container h-svh flex flex-col gap-14 justify-center items-center">
         <Image
           src={"/logo.png"}
           alt="Prodigi Logo"
