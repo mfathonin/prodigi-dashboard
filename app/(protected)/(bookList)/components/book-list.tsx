@@ -40,28 +40,27 @@ export default function BookList() {
   useEffect(() => {
     const supabase = createClient();
     const bookRepo = new BookRepository(supabase);
-    if (!books) setLoading(true);
-    bookRepo
-      .getBooks(bookQueryOptions)
-      .then(setBooks)
-      .finally(() => {
-        setLoading(false);
-      });
+    const fetchBook = () => {
+      bookRepo
+        .getBooks(bookQueryOptions)
+        .then(setBooks)
+        .finally(() => {
+          setLoading(false);
+        });
+    };
+
+    fetchBook();
 
     const booksChannel = supabase
       .channel("books-all-channel")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "books" },
-        () => {
-          const bookRepo = new BookRepository(supabase);
-          bookRepo.getBooks(bookQueryOptions).then(setBooks);
-        }
+        () => fetchBook()
       )
       .subscribe();
 
     return () => {
-      console.log(1349, "unsubcribe from existing channel");
       supabase.removeChannel(booksChannel);
     };
   }, [bookQueryOptions]);

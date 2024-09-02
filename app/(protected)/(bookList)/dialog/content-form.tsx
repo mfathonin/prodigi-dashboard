@@ -257,7 +257,8 @@ const generatePath = (title: string) => {
   const ret = `${dateStr}-${title
     .toLocaleLowerCase()
     .slice(0, len > 30 ? 30 : len)
-    .replace(/\s/g, "-")}`;
+    .replace(/\s/g, "-")
+    .replace(/[^a-zA-Z0-9-]/g, "")}`;
 
   return ret.toLocaleLowerCase();
 };
