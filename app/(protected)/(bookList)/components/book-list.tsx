@@ -18,7 +18,6 @@ const {
 export default function BookList() {
   const searchParams = useSearchParams();
   const { bookId } = useParams<{ bookId: string }>();
-  const [isExpired, setIsExpired] = useState(true);
 
   const searchKey = searchParams.get(BOOK_QUERY);
   const filter = searchParams.get(FILTER);
@@ -31,11 +30,9 @@ export default function BookList() {
       filter: filter ? filter.split(",") : undefined,
       sortBy: sortBy || "title",
       orderBy: orderBy || "asc",
-      isExpired,
     };
-    delete options.isExpired;
     return options;
-  }, [searchKey, filter, sortBy, orderBy, isExpired]);
+  }, [searchKey, filter, sortBy, orderBy]);
 
   const [books, setBooks] = useState<BooksContentsCount[]>();
   const [loading, setLoading] = useState(true);
@@ -43,14 +40,30 @@ export default function BookList() {
   useEffect(() => {
     const supabase = createClient();
     const bookRepo = new BookRepository(supabase);
-    setLoading(true);
+    if (!books) setLoading(true);
     bookRepo
       .getBooks(bookQueryOptions)
       .then(setBooks)
       .finally(() => {
         setLoading(false);
-        setIsExpired(false);
       });
+
+    const booksChannel = supabase
+      .channel("books-all-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "books" },
+        () => {
+          const bookRepo = new BookRepository(supabase);
+          bookRepo.getBooks(bookQueryOptions).then(setBooks);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log(1349, "unsubcribe from existing channel");
+      supabase.removeChannel(booksChannel);
+    };
   }, [bookQueryOptions]);
 
   if (loading || !books) {
@@ -82,7 +95,6 @@ export default function BookList() {
                 selected={bookId === book.uuid}
                 book={book}
                 searchParams={searchParams}
-                onAnyUpdate={() => setIsExpired(true)}
               />
             ))}
           </TooltipProvider>

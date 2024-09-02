@@ -13,15 +13,9 @@ export type BookItemProps = {
   book: BooksContentsCount;
   selected: boolean;
   searchParams?: ReadonlyURLSearchParams;
-  onAnyUpdate?: () => void;
 };
 
-export const BookItem = ({
-  book,
-  selected,
-  searchParams,
-  onAnyUpdate,
-}: BookItemProps) => {
+export const BookItem = ({ book, selected, searchParams }: BookItemProps) => {
   let url: string = `/${book.uuid}`;
   if (searchParams) {
     url += `?${searchParams.toString()}`;
@@ -52,7 +46,7 @@ export const BookItem = ({
           </p>
         </div>
       </div>
-      <BookOptions book={book} onAnyUpdate={onAnyUpdate} />
+      <BookOptions book={book} />
     </Link>
   );
 };
