@@ -60,6 +60,8 @@ export default function BookList() {
       )
       .subscribe();
 
+    console.log(1349, { booksChannel });
+
     return () => {
       supabase.removeChannel(booksChannel);
     };
