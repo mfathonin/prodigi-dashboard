@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       attributes: {
@@ -30,6 +55,33 @@ export type Database = {
         }
         Relationships: []
       }
+      banner: {
+        Row: {
+          created_at: string
+          id: number
+          image: string
+          updated_at: string
+          url: string
+          uuid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          image: string
+          updated_at?: string
+          url: string
+          uuid?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          image?: string
+          updated_at?: string
+          url?: string
+          uuid?: string
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           created_at: string
@@ -37,7 +89,7 @@ export type Database = {
           firestore_id: string | null
           id: number
           title: string
-          updated_at: string | null
+          updated_at: string
           uuid: string
         }
         Insert: {
@@ -46,7 +98,7 @@ export type Database = {
           firestore_id?: string | null
           id?: number
           title: string
-          updated_at?: string | null
+          updated_at?: string
           uuid?: string
         }
         Update: {
@@ -55,7 +107,7 @@ export type Database = {
           firestore_id?: string | null
           id?: number
           title?: string
-          updated_at?: string | null
+          updated_at?: string
           uuid?: string
         }
         Relationships: []
@@ -85,24 +137,10 @@ export type Database = {
             referencedColumns: ["uuid"]
           },
           {
-            foreignKeyName: "public_books_attributes_attribute_id_fkey"
-            columns: ["attribute_id"]
-            isOneToOne: false
-            referencedRelation: "books_attributes_view"
-            referencedColumns: ["attribute_id"]
-          },
-          {
             foreignKeyName: "public_books_attributes_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
-            referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "public_books_attributes_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books_contents_view"
             referencedColumns: ["uuid"]
           },
         ]
@@ -116,7 +154,7 @@ export type Database = {
           id: number
           link_id: string
           title: string
-          updated_at: string | null
+          updated_at: string
           uuid: string
         }
         Insert: {
@@ -127,7 +165,7 @@ export type Database = {
           id?: number
           link_id: string
           title: string
-          updated_at?: string | null
+          updated_at?: string
           uuid?: string
         }
         Update: {
@@ -138,7 +176,7 @@ export type Database = {
           id?: number
           link_id?: string
           title?: string
-          updated_at?: string | null
+          updated_at?: string
           uuid?: string
         }
         Relationships: [
@@ -147,13 +185,6 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
-            referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "public_contents_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books_contents_view"
             referencedColumns: ["uuid"]
           },
           {
@@ -188,100 +219,7 @@ export type Database = {
       }
     }
     Views: {
-      books_attributes_view: {
-        Row: {
-          attribute_id: string | null
-          book_id: string | null
-          key: string | null
-          value: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "public_books_attributes_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books"
-            referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "public_books_attributes_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books_contents_view"
-            referencedColumns: ["uuid"]
-          },
-        ]
-      }
-      books_contents_view: {
-        Row: {
-          contents: number | null
-          id: number | null
-          title: string | null
-          uuid: string | null
-        }
-        Relationships: []
-      }
-      contents_link: {
-        Row: {
-          book_id: string | null
-          created_at: string | null
-          deleted_at: string | null
-          firestore_id: string | null
-          id: number | null
-          link: Json | null
-          link_id: string | null
-          title: string | null
-          updated_at: string | null
-          uuid: string | null
-        }
-        Insert: {
-          book_id?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          firestore_id?: string | null
-          id?: number | null
-          link?: never
-          link_id?: string | null
-          title?: string | null
-          updated_at?: string | null
-          uuid?: string | null
-        }
-        Update: {
-          book_id?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          firestore_id?: string | null
-          id?: number | null
-          link?: never
-          link_id?: string | null
-          title?: string | null
-          updated_at?: string | null
-          uuid?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "public_contents_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books"
-            referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "public_contents_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books_contents_view"
-            referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "public_contents_link_id_fkey"
-            columns: ["link_id"]
-            isOneToOne: false
-            referencedRelation: "link"
-            referencedColumns: ["uuid"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
@@ -376,4 +314,3 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never
-
