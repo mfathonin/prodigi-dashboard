@@ -20,11 +20,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supaclient/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ChangeEventHandler, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
+import { useBannerDialog } from "../dialog-context";
 
 const bannerSchema = z.object({
   image: (typeof window === "undefined"
@@ -44,6 +49,7 @@ const bannerSchema = z.object({
 type BannerSchema = z.infer<typeof bannerSchema>;
 
 export const Toolbar = () => {
+  const router = useRouter();
   const form = useForm<BannerSchema>({
     resolver: zodResolver(bannerSchema),
     reValidateMode: "onChange",
@@ -53,7 +59,8 @@ export const Toolbar = () => {
   });
 
   const [selectedImage, setImage] = useState<string>();
-  const [isOpen, setOpen] = useState(false);
+  const { isOpen, setOpen } = useBannerDialog();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fileRef = form.register("image");
 
@@ -72,8 +79,53 @@ export const Toolbar = () => {
   };
 
   const onSubmit = async (values: BannerSchema) => {
-    console.log({ values });
-    setOpen(false);
+    setIsSubmitting(true);
+    const supabase = createClient();
+
+    try {
+      // Upload image to Supabase storage
+      const file = values.image[0] as File;
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("banner")
+        .upload(fileName, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL of the uploaded image
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("banner").getPublicUrl(fileName);
+
+      // Save banner information to the "banner" table
+      const { data: insertData, error: insertError } = await supabase
+        .from("banner")
+        .insert({
+          image: publicUrl,
+          url: values.url,
+        });
+
+      if (insertError) throw insertError;
+
+      // Refresh the page using router.refresh()
+      router.refresh();
+
+      toast.success("Banner Tersimpan", {
+        description: "Banner baru berhasil ditambahkan",
+      });
+
+      onOpenChange(false);
+    } catch (error: Error | any) {
+      console.error("Error uploading banner:", error);
+      toast.error("Gagal menambahkan banner", {
+        description: `error: ${error.message}`,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const onOpenChange = (open: boolean) => {
@@ -169,7 +221,20 @@ export const Toolbar = () => {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit">Submit</Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!form.formState.isValid || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      Menyimpan...
+                      <i className="bx bx-loader animate-loading ms-2" />
+                    </>
+                  ) : (
+                    "Simpan"
+                  )}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
