@@ -7,6 +7,18 @@ const processEnv = process.env;
 dotenvExpand.expand({ parsed: { ...processEnv } });
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com", // for testing
+      },
+      {
+        hostname: "*.supabase.co",
+      },
+    ],
+  },
+};
 
 export default nextConfig;
