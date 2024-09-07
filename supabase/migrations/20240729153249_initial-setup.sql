@@ -20,6 +20,8 @@ alter table "public"."books" alter column "title" set not null;
 
 alter table "public"."books" alter column "updated_at" set not null;
 
+alter table "public"."books" alter column "updated_at" set default now();
+
 alter table "public"."books" alter column "updated_at" set data type timestamp with time zone using "updated_at"::timestamp with time zone;
 
 alter table "public"."books" alter column "uuid" set default gen_random_uuid();
@@ -55,6 +57,8 @@ alter table "public"."contents" alter column "link_id" set data type uuid using 
 alter table "public"."contents" alter column "title" set not null;
 
 alter table "public"."contents" alter column "updated_at" set not null;
+
+alter table "public"."contents" alter column "updated_at" set default now();
 
 alter table "public"."contents" alter column "updated_at" set data type timestamp with time zone using "updated_at"::timestamp with time zone;
 

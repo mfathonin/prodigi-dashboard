@@ -7,7 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "supa:typegen": "npx supabase gen types typescript --db-url ${SUPABASE_DB_URL} > models/supaservice.types.ts"
+    "env:setup": "bash ./scripts/set_env.sh",
+    "env:clear": "bash ./scripts/clear_env.sh",
+    "supa:start": "bash -c 'source ./scripts/set_env.sh && npx supabase start'",
+    "supa:stop": "bash -c 'npx supabase stop --no-backup && source ./scripts/clear_env.sh'",
+    "supa:typegen": "bash -c 'source ./scripts/set_env.sh && npx supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" > models/supaservice.types.ts'",
+    "supa:db:diff": "bash -c 'source ./scripts/set_env.sh && echo \"File name: ${1:-diff}\" && pnpm dlx supabase db diff -f \"${1:-diff}\" --db-url \"$SUPABASE_DB_URL\"' --",
+    "supa:db:check": "bash -c 'source ./scripts/set_env.sh && npx supabase status'",
+    "supa:db:push": "bash -c 'source ./scripts/set_env.sh && npx supabase db push'",
+    "supa:db:backup": "bash -c 'source ./scripts/set_env.sh && source ./scripts/prepare_backup.sh \"$1\" && npx supabase db dump --data-only -f \"supabase/backups/$BACKUP_FILENAME\" --db-url \"$SUPABASE_DB_URL\"' --"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -24,8 +32,10 @@
     "@radix-ui/react-tooltip": "^1.1.2",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.44.3",
+    "@tanstack/react-table": "^8.20.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
     "next": "14.2.5",
     "next-themes": "^0.3.0",
     "react": "^18",
