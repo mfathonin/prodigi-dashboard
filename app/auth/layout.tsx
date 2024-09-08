@@ -1,26 +1,17 @@
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FullLogo } from "@/components/ui/full-logo";
-import { createClient } from "@/lib/supaclient/server";
 
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Prodigi",
+  title: "Prodigi - Authentication",
 };
 
-export default async function AuthLayout({
+export default function AuthLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (data.user != null) {
-    // Redirect to protected page
-    redirect("/");
-  }
-
   return (
     <>
       <ThemeToggle className="fixed top-4 right-4" />

@@ -1,3 +1,4 @@
+import { User } from "@supabase/supabase-js";
 import { z } from "zod";
 
 export const loginSchema = z.object({
@@ -34,3 +35,12 @@ export const registerDefaultValues: Register = {
   password: "",
   code: "",
 };
+
+interface UserRole {
+  id: string;
+  role: string;
+}
+
+export interface ExtendedUser extends User {
+  user_roles?: UserRole[];
+}

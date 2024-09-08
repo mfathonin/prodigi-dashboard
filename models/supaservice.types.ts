@@ -32,26 +32,20 @@ export type Database = {
       }
       banner: {
         Row: {
-          created_at: string
           id: number
           image: string
-          updated_at: string
           url: string
           uuid: string
         }
         Insert: {
-          created_at?: string
           id?: number
           image: string
-          updated_at?: string
           url: string
           uuid?: string
         }
         Update: {
-          created_at?: string
           id?: number
           image?: string
-          updated_at?: string
           url?: string
           uuid?: string
         }
@@ -192,12 +186,43 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

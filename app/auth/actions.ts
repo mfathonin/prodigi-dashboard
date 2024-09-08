@@ -41,13 +41,49 @@ export const handleSingOut = async (): Promise<ServerActionResult<string>> => {
   }
 };
 
+export const handleResetPassword = async (
+  email: string
+): Promise<ServerActionResult<string>> => {
+  const supabase = createClient();
+
+  try {
+    const redirectTo = `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/update-password`;
+    console.log(redirectTo);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+
+    if (error) throw error;
+
+    return { data: "Password reset email sent", error: null };
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const handleUpdatePassword = async (
+  newPassword: string
+): Promise<ServerActionResult<string>> => {
+  const supabase = createClient();
+
+  try {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) throw error;
+
+    return { data: "Password updated successfully", error: null };
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
 const handleError = (error: unknown) => {
   if (error instanceof AuthError && error.status)
     return {
       data: null,
       error: {
         status: error.status,
-        message: errors.INVALID_CREDENTIALS,
+        message: error.message ?? errors.INVALID_CREDENTIALS,
       },
     };
 

@@ -1,6 +1,4 @@
-import { createClient } from "@/lib/supaclient/server";
-
-import { redirect } from "next/navigation";
+import { redirectIfUnauthenticated } from "@/lib/auth-helpers";
 
 import { Footer } from "./components/footer";
 import { TopNavbar } from "./components/top-navbar";
@@ -10,12 +8,7 @@ export default async function ProtectedPageLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
-
-  if (data.user == null || error) {
-    redirect("/login");
-  }
+  await redirectIfUnauthenticated();
 
   return (
     <>

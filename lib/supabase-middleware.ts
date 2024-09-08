@@ -37,20 +37,19 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const publicPath = ["/login", "/register", "/links", "/reset-password"];
+  const publicPaths = ["/auth", "/links"];
 
-  if (!user) {
-    const isInPrivatePath = publicPath.reduce((acc, cur) =>
-      acc && !request.nextUrl.pathname.startsWith(cur),
-      true
-    );
+  const currentPath = request.nextUrl.pathname;
+  const isPublicPath = publicPaths.some((path) => {
+    const isPublic = currentPath.startsWith(path) || currentPath === path;
+    return isPublic;
+  });
+  if (!user && !isPublicPath) {
+    // no user, potentially respond by redirecting the user to the login page
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
 
-    if (isInPrivatePath) {
-      // no user, potentially respond by redirecting the user to the login page
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
-    };
+    return NextResponse.redirect(url);
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

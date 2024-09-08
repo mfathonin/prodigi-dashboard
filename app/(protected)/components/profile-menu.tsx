@@ -1,6 +1,6 @@
 "use client";
 
-import { handleSingOut } from "@/app/(auth)/actions";
+import { handleSingOut } from "@/app/auth/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -12,16 +12,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { User } from "@supabase/supabase-js";
+import { ExtendedUser } from "@/models/users";
 
 import { useRouter } from "next/navigation";
 
 export type ProfileMenuProps = {
-  user: User;
+  user: ExtendedUser;
 };
 
 export const ProfileMenu = ({ user }: ProfileMenuProps) => {
   const router = useRouter();
+  const is_admin =
+    user.user_roles?.some((role) => role.role === "admin") ?? false;
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -56,14 +58,20 @@ export const ProfileMenu = ({ user }: ProfileMenuProps) => {
             label="In-app Banner"
             icon="bx bx-collection"
           />
+          <MenuItems
+            onClick={() => handleNavigate("/users")}
+            label="User Management"
+            icon="bx bx-user"
+            disabled={!is_admin}
+          />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
         <DropdownMenuGroup>
           <MenuItems
-            onClick={() => handleNavigate("/reset-password")}
+            onClick={() => handleNavigate("/auth/update-password")}
             icon="bx bxs-key"
-            label="Reset password"
+            label="Ubah password"
           />
           <MenuItems
             onClick={handleLogout}
@@ -81,13 +89,21 @@ type MenuItemsProps = {
   className?: string;
   label: string;
   onClick?: () => void;
+  disabled?: boolean;
 };
 
-const MenuItems = ({ icon, label, className, onClick }: MenuItemsProps) => {
+const MenuItems = ({
+  icon,
+  label,
+  className,
+  onClick,
+  disabled,
+}: MenuItemsProps) => {
   return (
     <DropdownMenuItem
       className={cn(className, "flex gap-x-3 items-center justify-start")}
       onClick={onClick}
+      disabled={disabled}
     >
       {icon && <i className={cn("text-lg", icon)} />}
       {label}
