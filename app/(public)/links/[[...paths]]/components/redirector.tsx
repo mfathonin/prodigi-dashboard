@@ -11,11 +11,13 @@ export const Redirector = ({ link }: { link: string }) => {
   if (counter <= 0) {
     window.location.replace(link);
     isInitialize && clearInterval(isInitialize);
-    console.log("opening link", link);
   }
 
   if (counter === initialNumber && !isInitialize) {
-    const intervalId = setInterval(() => counter > 0 && setCounter(c => c - 1), 1000);
+    const intervalId = setInterval(
+      () => counter > 0 && setCounter((c) => c - 1),
+      1000
+    );
     setInitialize(intervalId);
   }
 
@@ -24,4 +26,4 @@ export const Redirector = ({ link }: { link: string }) => {
       Opening{counter ? ` in ${counter}` : ""}...
     </div>
   );
-}
+};

@@ -13,12 +13,10 @@ export default async function LinkPage({
   params: { paths: string[] };
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  console.log({ params, searchParams })
   const linkPath = params.paths?.[0];
   const appSignature = searchParams["app"];
 
-  if (!linkPath)
-    return <DownloadPage />
+  if (!linkPath) return <DownloadPage />;
 
   const supabase = createClient();
   const contentRepo = new ContentsRepository(supabase);
@@ -30,31 +28,25 @@ export default async function LinkPage({
 
     return (
       <div className="container h-svh flex flex-col gap-14 justify-center items-center">
-        <Image
-          src={"/logo.png"}
-          alt="Prodigi Logo"
-          width={100}
-          height={100}
-        />
+        <Image src={"/logo.png"} alt="Prodigi Logo" width={100} height={100} />
 
         <div className="flex flex-col items-center gap-1">
           <p className="text-sm">Membuka konten digital</p>
           <p className="text-lg font-semibold">{contentWithLink.title}</p>
         </div>
 
-        {appSignature === process.env.NEXT_PUBLIC_APP_ID ?
+        {appSignature === process.env.NEXT_PUBLIC_APP_ID ? (
           <Redirector link={contentWithLink.link.targetUrl} />
-          : (
-            <div className="flex flex-col items-center">
-              <p className="mb-3">Buka dari aplikasi Prodigi!</p>
-              <DownloadButton />
-            </div>
-          )}
+        ) : (
+          <div className="flex flex-col items-center">
+            <p className="mb-3">Buka dari aplikasi Prodigi!</p>
+            <DownloadButton />
+          </div>
+        )}
       </div>
     );
   } catch (e) {
     console.error(e);
-    return <DownloadPage message="Konten digital tidak ditemukan" />
+    return <DownloadPage message="Konten digital tidak ditemukan" />;
   }
-};
-
+}
