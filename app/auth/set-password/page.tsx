@@ -1,7 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supaclient/client";
 import { Button } from "@/components/ui/button";
-import { ErrorWrapper } from "@/components/ui/error-wrapper";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import {
   Form,
   FormControl,
@@ -10,99 +17,84 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supaclient/client";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { ErrorWrapper } from "@/components/ui/error-wrapper";
 import { User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { handleUpdatePassword } from "../actions";
 
-const updatePasswordSchema = z
+const setPasswordSchema = z
   .object({
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z.string().min(8, "Password harus minimal 8 karakter"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Password tidak cocok",
     path: ["confirmPassword"],
   });
 
-type UpdatePasswordForm = z.infer<typeof updatePasswordSchema>;
+type SetPasswordForm = z.infer<typeof setPasswordSchema>;
 
-export default function UpdatePasswordForm() {
+export default function SetPasswordPage() {
   const [errorMessage, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const form = useForm<UpdatePasswordForm>({
-    resolver: zodResolver(updatePasswordSchema),
+  const form = useForm<SetPasswordForm>({
+    resolver: zodResolver(setPasswordSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
     },
   });
 
-  const onSubmit = async (values: UpdatePasswordForm) => {
-    const { error: updateError } = await handleUpdatePassword(values.password);
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.hash.substring(1));
+    const refreshToken = urlParams.get("refresh_token");
+    if (!refreshToken) {
+      toast.error("Token tidak valid atau tidak ada");
+      return router.push("/");
+    }
 
-    if (updateError) {
-      setError(updateError?.message ?? "Unknown error");
+    const refreshSession = async () => {
+      const supabase = createClient();
+      const {
+        error,
+        data: { user },
+      } = await supabase.auth.refreshSession({
+        refresh_token: refreshToken,
+      });
+      if (error) {
+        setError("Gagal memperbarui sesi: " + error.message);
+      }
+      return user;
+    };
+    refreshSession()
+      .then((user) => {
+        if (user) {
+          setUser(user);
+        }
+      })
+      .catch((error) => {
+        setError("Gagal memperbarui sesi: " + error.message);
+      });
+  }, [searchParams, router]);
+
+  const onSubmit = async (values: SetPasswordForm) => {
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.updateUser({
+      password: values.password,
+    });
+
+    if (error) {
+      setError("Gagal membuat password: " + error.message);
       setSuccessMessage(null);
     } else {
-      setSuccessMessage("Password updated successfully.");
+      setSuccessMessage("Password berhasil dibuat");
       setError(null);
       router.push("/");
     }
   };
-
-  useEffect(() => {
-    const init = async () => {
-      const supabase = createClient();
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        // get auth session and refresh token from cookies in client component
-        const accessToken = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("sb-access-token="))
-          ?.split("=")[1];
-        const refreshToken = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("sb-refresh-token="))
-          ?.split("=")[1];
-        if (accessToken && refreshToken) {
-          const {
-            data: { user },
-            error: newSessionError,
-          } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (user) {
-            return setUser(user);
-          }
-
-          if (newSessionError) {
-            console.log(newSessionError);
-            setError("Gagal memperbarui sesi: " + newSessionError.message);
-          }
-        } else {
-          setError("Gagal memperbarui sesi: tidak ada valid token");
-        }
-      } else {
-        setUser(user);
-      }
-    };
-    init();
-  }, []);
 
   return (
     <>
@@ -128,7 +120,7 @@ export default function UpdatePasswordForm() {
           {user && (
             <div className="flex flex-col gap-y-1 mb-4">
               <p className="w-full text-center text-opacity-40 text-sm">
-                Update password untuk akun
+                Atur password untuk akun
               </p>
               <p className="text-center font-thin text-opacity-40 text-sm">
                 {user.email}
@@ -170,7 +162,7 @@ export default function UpdatePasswordForm() {
             )}
           />
           <Button type="submit" className="w-full mt-4" disabled={!user}>
-            Ubah Password
+            Buat Password
           </Button>
         </form>
       </Form>

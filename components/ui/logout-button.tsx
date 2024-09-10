@@ -1,6 +1,6 @@
 "use client";
 
-import { handleSingOut } from "@/app/(auth)/actions";
+import { handleSingOut } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 
 export const LogoutButton = () => {

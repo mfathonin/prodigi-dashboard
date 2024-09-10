@@ -5,13 +5,16 @@ export const MenuItems = ({
   onClick,
   label,
   icon,
+  disabled,
 }: {
   onClick?: (e: MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => void;
   label: string;
   icon: string;
+  disabled?: boolean;
 }) => {
   return (
     <DropdownMenuItem
+      disabled={disabled}
       onClick={(e) => {
         e.stopPropagation();
         onClick && onClick(e);

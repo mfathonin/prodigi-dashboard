@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supaclient/server";
 import { ExtendedUser } from "@/models/users";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "./supaclient/admin";
 
@@ -53,7 +54,7 @@ export async function checkAdminAccess() {
   });
 
   if (error || !data) {
-    redirect("/unauthorized");
+    redirect("/auth/unauthorized");
   }
 }
 
@@ -63,4 +64,46 @@ export async function deleteUser(userId: string) {
   if (error) {
     throw error;
   }
+  revalidatePath("/users");
+}
+
+export async function inviteUser(email: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/set-password`,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  revalidatePath("/users");
+  return data;
+}
+
+export async function toggleAdminRole(userId: string, isAdmin: boolean) {
+  const supabase = createClient();
+
+  if (isAdmin) {
+    // Add admin role
+    const { error } = await supabase
+      .from("user_roles")
+      .insert({ id: userId, role: "admin" });
+
+    if (error) {
+      throw new Error("Failed to add admin role");
+    }
+  } else {
+    // Remove admin role
+    const { error } = await supabase
+      .from("user_roles")
+      .delete()
+      .match({ id: userId });
+
+    if (error) {
+      throw new Error("Failed to remove admin role");
+    }
+  }
+
+  revalidatePath("/users");
 }

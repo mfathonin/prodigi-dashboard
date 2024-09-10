@@ -1,12 +1,11 @@
+import { checkAdminAccess } from "@/lib/auth-helpers";
 import { createAdminClient } from "@/lib/supaclient/admin";
+import { ExtendedUser } from "@/models/users";
+import { unstable_cache } from "next/cache";
 import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
-import { checkAdminAccess } from "@/lib/auth-helpers";
-import { ExtendedUser } from "@/models/users";
 
-export default async function UsersPage() {
-  await checkAdminAccess();
-
+const getUsers = unstable_cache(async () => {
   const supabaseAdmin = createAdminClient();
 
   // Fetch users from Supabase
@@ -15,7 +14,7 @@ export default async function UsersPage() {
 
   if (usersError) {
     console.error("Error fetching users:", usersError);
-    return <div>Error loading users</div>;
+    throw usersError;
   }
 
   // Fetch user roles
@@ -25,7 +24,7 @@ export default async function UsersPage() {
 
   if (rolesError) {
     console.error("Error fetching user roles:", rolesError);
-    return <div>Error loading user roles</div>;
+    throw rolesError;
   }
 
   // Combine user data with roles
@@ -34,15 +33,19 @@ export default async function UsersPage() {
     user_roles: userRoles.filter((role) => role.id === user.id),
   }));
 
-  return (
-    <div className="space-y-10">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-xl md:text-2xl lg:text-3xl">Kelola Pengguna</h1>
-        <p className="text-sm text-gray-500">
-          Kelola pengguna Prodigi dan akses mereka ke aplikasi.
-        </p>
-      </div>
-      <DataTable columns={columns} data={usersWithRoles} />
-    </div>
-  );
+  return usersWithRoles;
+});
+
+export default async function UsersPage() {
+  await checkAdminAccess();
+
+  let usersWithRoles: ExtendedUser[] = [];
+  try {
+    usersWithRoles = await getUsers();
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return <div>Error loading users</div>;
+  }
+
+  return <DataTable columns={columns} data={usersWithRoles} />;
 }

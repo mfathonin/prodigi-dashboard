@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MenuItems } from "@/components/ui/menu-items";
 import { deleteUser } from "@/lib/auth-helpers";
+import { createClient } from "@/lib/supaclient/client";
 import { User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 type UserActionsProps = {
@@ -29,8 +29,24 @@ type UserActionsProps = {
 };
 
 export const UserActions = ({ user }: UserActionsProps) => {
-  const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Error getting user:", error);
+        toast.error("Failed to get user", {
+          description: "Failed to get user",
+        });
+      } else {
+        setCurrentUser(data.user);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleResetPassword = async () => {
     const { error } = await resetPasswordAction(user.email!);
@@ -53,7 +69,7 @@ export const UserActions = ({ user }: UserActionsProps) => {
       toast.success("User deleted", {
         description: `User ${user.email} has been deleted`,
       });
-      router.refresh();
+      window.location.reload();
     } catch (error: unknown) {
       toast.error("Failed to delete user", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -85,6 +101,7 @@ export const UserActions = ({ user }: UserActionsProps) => {
               onClick={() => setIsDeleteDialogOpen(true)}
               label="Delete user"
               icon="bx bx-trash"
+              disabled={user.id === currentUser?.id}
             />
           </DropdownMenuGroup>
         </DropdownMenuContent>

@@ -2,12 +2,13 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { createClient } from "@/lib/supaclient/client";
-import { ExtendedUser } from "@/models/user";
+import { ExtendedUser } from "@/models/users";
 import { ColumnDef } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { UserActions } from "./user-actions";
+import { toggleAdminRole } from "@/lib/auth-helpers";
 
 export const columns: ColumnDef<ExtendedUser>[] = [
   {
@@ -75,46 +76,22 @@ const AdminCheckbox = ({ user }: { user: ExtendedUser }) => {
 
   const handleCheckboxChange = async (checked: boolean) => {
     setIsLoading(true);
-    const supabase = createClient();
-
-    if (checked) {
-      // Add admin role
-      const { error } = await supabase
-        .from("user_roles")
-        .insert({ id: user.id, role: "admin" });
-
-      if (error) {
-        console.error("Error adding admin role:", error);
-        toast.error("Failed to add admin role", {
-          description: "Failed to add admin role",
-        });
-      } else {
-        setIsAdminState(true);
-        toast.success("User Menjadi Admin", {
-          description: `User ${user.email} sekarang menjadi Admin`,
-        });
-      }
-    } else {
-      // Remove admin role
-      const { error } = await supabase
-        .from("user_roles")
-        .delete()
-        .match({ id: user.id });
-
-      if (error) {
-        console.error("Error removing admin role:", error);
-        toast.error("Gagal Menghapus Admin", {
-          description: "Gagal Menghapus Admin",
-        });
-      } else {
-        setIsAdminState(false);
-        toast.success(`Akses Admin Dihapus`, {
-          description: `User ${user.email} tidak lagi menjadi Admin`,
-        });
-      }
+    try {
+      await toggleAdminRole(user.id, checked);
+      setIsAdminState(checked);
+      toast.success(checked ? "User Menjadi Admin" : "Akses Admin Dihapus", {
+        description: checked
+          ? `User ${user.email} sekarang menjadi Admin`
+          : `User ${user.email} tidak lagi menjadi Admin`,
+      });
+    } catch (error) {
+      console.error("Error toggling admin role:", error);
+      toast.error("Gagal Mengubah Status Admin", {
+        description: "Terjadi kesalahan saat mengubah status admin",
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (

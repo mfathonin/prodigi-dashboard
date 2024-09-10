@@ -2,7 +2,7 @@ import { getAuthenticatedUser } from "@/lib/auth-helpers";
 import { FullLogo } from "@/components/ui/full-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileMenu } from "./profile-menu";
-import { ExtendedUser } from "@/models/user";
+import { ExtendedUser } from "@/models/users";
 
 export const TopNavbar = async () => {
   const user = await getAuthenticatedUser();
