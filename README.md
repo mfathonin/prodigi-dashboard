@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Prodigi Dashboard
+
+Prodigi Dashboard is an admin web application for managing digital book content. Built with modern web technologies, it offers a robust and user-friendly interface for content management.
+
+## Tech Stack
+
+- [Next.js 14](https://nextjs.org/docs) with App Router
+- [shadcn/ui](https://ui.shadcn.com) for UI components
+- [Tailwind CSS](https://tailwindcss.com) for styling
+- [Supabase](https://supabase.com) for backend services
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js v18
+- pnpm package manager
+
+### Setup
+
+1. Install dependencies:
+
+   ```
+   pnpm install
+   ```
+
+1. Set up environment variables:
+
+   - Copy `.env.example` to `.env.local`
+   - Update the variables in `.env.local` with your Supabase credentials
+
+1. Ensure your Supabase project is properly configured and accessible
+
+### Development
+
+Run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Supabase Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+The project includes several helpful scripts for working with Supabase:
 
-## Learn More
+- `pnpm supa:start`: Start the local Supabase service
+- `pnpm supa:stop`: Stop the local Supabase service
+- `pnpm supa:typegen`: Generate TypeScript types from your Supabase schema
+- `pnpm supa:db:diff`: Generate a diff of your database changes
+- `pnpm supa:db:check`: Check the status of your Supabase database
+- `pnpm supa:db:push`: Push local changes to your Supabase database
+- `pnpm supa:db:backup`: Create a backup of your Supabase database
 
-To learn more about Next.js, take a look at the following resources:
+For more details on these scripts, refer to the `package.json` file.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- Book content management
+- Link shortener with QR code available
+- In app promotion banner
+- User management
+- Responsive design
 
-## Deploy on Vercel
+## Additional Setup advices
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- To use gmail as SMTP server, you can follow [this discussion](https://github.com/orgs/supabase/discussions/19646)
+- Setup a local supabase service using following command:
+  ```bash
+  pnpm dlx supabase start
+  ```
+  This will start a local supabase service with default configuration. I suggest to run this command on a separate folder of this project.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+For any questions or support, please open an issue in the GitHub repository.
+
+> **Author**
+>
+> [mfathonin](https://github.com/mfathonin) <br/> > _individual contributor_
