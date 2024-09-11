@@ -15,7 +15,9 @@
     "supa:db:diff": "bash -c 'source ./scripts/set_env.sh && echo \"File name: ${1:-diff}\" && pnpm dlx supabase db diff -f \"${1:-diff}\" --db-url \"$SUPABASE_DB_URL\"' --",
     "supa:db:check": "bash -c 'source ./scripts/set_env.sh && npx supabase status'",
     "supa:db:push": "bash -c 'source ./scripts/set_env.sh && npx supabase db push'",
-    "supa:db:backup": "bash -c 'source ./scripts/set_env.sh && source ./scripts/prepare_backup.sh \"$1\" && npx supabase db dump --data-only -f \"supabase/backups/$BACKUP_FILENAME\" --db-url \"$SUPABASE_DB_URL\"' --"
+    "supa:db:backup": "bash -c 'source ./scripts/set_env.sh && source ./scripts/prepare_backup.sh \"$1\" && npx supabase db dump --data-only -f \"supabase/backups/$BACKUP_FILENAME\" --db-url \"$SUPABASE_DB_URL\"' --",
+    "supa:migration": "node scripts/migration-repair.js",
+    "supa:migration:down": "bash -c 'source ./scripts/set_env.sh && node scripts/migration-down.js \"$@\"' --"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
