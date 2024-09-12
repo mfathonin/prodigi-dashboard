@@ -40,7 +40,7 @@ export const Toolbar = () => {
     },
   };
 
-  const onSeachClick = () => {
+  const onFilterClick = () => {
     dialog?.openDialog<FilterSort>(
       "form",
       initialFilterSort,
@@ -78,7 +78,7 @@ export const Toolbar = () => {
           variant="outline"
           size="icon"
           className="rounded-full flex-shrink-0"
-          onClick={onSeachClick}
+          onClick={onFilterClick}
         >
           <i className="bx bx-filter-alt text-sm md:text-lg text-primary-500-400-token" />
         </Button>

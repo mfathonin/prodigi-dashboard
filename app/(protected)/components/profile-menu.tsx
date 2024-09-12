@@ -54,14 +54,19 @@ export const ProfileMenu = ({ user }: ProfileMenuProps) => {
             icon="bx bxs-book-content"
           />
           <MenuItems
+            onClick={() => handleNavigate("/book-attributes")}
+            label="Kelola atribut"
+            icon="bx bxs-bookmarks"
+          />
+          <MenuItems
             onClick={() => handleNavigate("/banner")}
             label="In-app Banner"
-            icon="bx bx-collection"
+            icon="bx bxs-collection"
           />
           <MenuItems
             onClick={() => handleNavigate("/users")}
             label="User Management"
-            icon="bx bx-user"
+            icon="bx bxs-user"
             disabled={!is_admin}
           />
         </DropdownMenuGroup>

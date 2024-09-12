@@ -14,6 +14,7 @@ import { AttritbutesList } from "@/models";
 import { AttributesRepository } from "@/repositories/attributes";
 import { useEffect, useMemo, useState } from "react";
 import { ControllerRenderProps } from "react-hook-form";
+import Link from "next/link";
 
 export const AttributeSelector = ({
   field,
@@ -35,9 +36,17 @@ export const AttributeSelector = ({
   if (!field || !fieldValues) return null;
   if (fieldValues.length === 0)
     return (
-      <p className="text-opacity-70 w-full text-center text-zinc-400 dark:text-zinc-500 text-sm italic">
-        Klik tombol <i className="bx bx-plus" /> untuk memilih atribut
-      </p>
+      <div className="text-center">
+        <p className="text-opacity-70 w-full text-zinc-400 dark:text-zinc-500 text-sm italic mb-2">
+          Klik tombol <i className="bx bx-plus" /> untuk memilih atribut
+        </p>
+        <Link
+          href="/book-attributes"
+          className="text-sm text-blue-500 hover:underline"
+        >
+          Manage Attributes
+        </Link>
+      </div>
     );
 
   return (
@@ -141,17 +150,23 @@ export const AttributeSelectorItem = ({
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {attributeKeys.map((key) => (
-            <SelectItem
-              key={key}
-              value={key}
-              onSelect={() => {
-                setSelectedKey(key);
-              }}
-            >
-              {key}
+          {attributeKeys.length > 0 ? (
+            attributeKeys.map((key) => (
+              <SelectItem
+                key={key}
+                value={key}
+                onSelect={() => {
+                  setSelectedKey(key);
+                }}
+              >
+                {key}
+              </SelectItem>
+            ))
+          ) : (
+            <SelectItem value="empty" disabled>
+              Tidak ada atribut tersedia
             </SelectItem>
-          ))}
+          )}
         </SelectContent>
       </Select>
       <Select

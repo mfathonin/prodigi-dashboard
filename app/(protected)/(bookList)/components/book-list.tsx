@@ -85,7 +85,7 @@ export default function BookList() {
     <div className="flex flex-col gap-4">
       <p className="text-xs">Terdapat {books.length} buku</p>
 
-      <div className="rounded-md bg-background w-full overflow-hidden">
+      <div className="rounded-md bg-background w-full overflow-hidden border border-zinc-200 dark:border-zinc-700 shadow-sm">
         <div className="max-h-[calc(70dvh-148px)] overflow-y-auto">
           <TooltipProvider>
             {books.map((book) => (

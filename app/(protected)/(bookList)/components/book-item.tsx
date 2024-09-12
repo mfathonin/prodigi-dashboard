@@ -25,8 +25,10 @@ export const BookItem = ({ book, selected, searchParams }: BookItemProps) => {
     <Link
       href={url}
       className={cn(
-        "flex items-center group justify-between px-4 py-3 border-b last:border-0 border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900",
-        selected ? "bg-slate-100 dark:bg-slate-900 font-bold" : ""
+        "flex items-center group justify-between px-4 py-3 border-b last:border-0 border-zinc-200 dark:border-zinc-700 cursor-pointer hover:bg-zinc-100 dark:hover:bg-slate-900",
+        selected
+          ? "bg-zinc-200 dark:bg-slate-700 dark:hover:bg-slate-800 font-bold"
+          : ""
       )}
     >
       <div className="flex items-center gap-2">
