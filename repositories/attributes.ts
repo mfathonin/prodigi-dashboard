@@ -74,4 +74,29 @@ export class AttributesRepository implements Attributes {
       .in("attribute_id", attributes);
     if (response.error) throw response.error;
   }
+
+  async addAttribute(key: string, value: string) {
+    const response = await this._db
+      .from("attributes")
+      .insert({ key, value })
+      .select();
+    if (response.error) throw response.error;
+    return response.data[0];
+  }
+
+  async deleteAttribute(uuid: string) {
+    const response = await this._db
+      .from("attributes")
+      .delete()
+      .eq("uuid", uuid);
+    if (response.error) throw response.error;
+  }
+
+  async updateAttribute(uuid: string, key: string, value: string) {
+    const response = await this._db
+      .from("attributes")
+      .update({ key, value })
+      .eq("uuid", uuid);
+    if (response.error) throw response.error;
+  }
 }

@@ -78,7 +78,7 @@ alter table "public"."link" alter column "uuid" set not null;
 
 alter table "public"."link" alter column "uuid" set data type uuid using "uuid"::uuid;
 
-CREATE INDEX attributes_key_value_idx ON public.attributes USING btree (key, value);
+CREATE UNIQUE INDEX attributes_key_value_idx ON public.attributes USING btree (key, value);
 
 CREATE UNIQUE INDEX attributes_uuid_key ON public.attributes USING btree (uuid);
 
