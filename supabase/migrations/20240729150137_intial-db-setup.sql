@@ -1,17 +1,17 @@
 create extension if not exists "moddatetime" with schema "extensions";
 
 
-create sequence "public"."attributes_id_seq";
+create sequence if not exists "public"."attributes_id_seq";
 
-create sequence "public"."books_attributes_id_seq";
+create sequence if not exists "public"."books_attributes_id_seq";
 
-create sequence "public"."books_id_seq";
+create sequence if not exists "public"."books_id_seq";
 
-create sequence "public"."contents_id_seq";
+create sequence if not exists "public"."contents_id_seq";
 
-create sequence "public"."link_id_seq";
+create sequence if not exists "public"."link_id_seq";
 
-create table "public"."attributes" (
+create table if not exists "public"."attributes" (
     "id" bigint not null default nextval('attributes_id_seq'::regclass),
     "uuid" text,
     "key" text,
@@ -19,7 +19,7 @@ create table "public"."attributes" (
 );
 
 
-create table "public"."books" (
+create table if not exists "public"."books" (
     "id" bigint not null default nextval('books_id_seq'::regclass),
     "firestore_id" text,
     "uuid" text,
@@ -29,14 +29,14 @@ create table "public"."books" (
 );
 
 
-create table "public"."books_attributes" (
+create table if not exists "public"."books_attributes" (
     "id" bigint not null default nextval('books_attributes_id_seq'::regclass),
     "book_id" text,
     "attribute_id" text
 );
 
 
-create table "public"."contents" (
+create table if not exists "public"."contents" (
     "id" bigint not null default nextval('contents_id_seq'::regclass),
     "title" text,
     "firestore_id" text,
@@ -48,7 +48,7 @@ create table "public"."contents" (
 );
 
 
-create table "public"."link" (
+create table if not exists "public"."link" (
     "id" bigint not null default nextval('link_id_seq'::regclass),
     "uuid" text,
     "target_url" text,
@@ -66,15 +66,15 @@ alter sequence "public"."contents_id_seq" owned by "public"."contents"."id";
 
 alter sequence "public"."link_id_seq" owned by "public"."link"."id";
 
-CREATE UNIQUE INDEX attributes_pkey ON public.attributes USING btree (id);
+CREATE UNIQUE INDEX if not exists attributes_pkey ON public.attributes USING btree (id);
 
-CREATE UNIQUE INDEX books_attributes_pkey ON public.books_attributes USING btree (id);
+CREATE UNIQUE INDEX if not exists books_attributes_pkey ON public.books_attributes USING btree (id);
 
-CREATE UNIQUE INDEX books_pkey ON public.books USING btree (id);
+CREATE UNIQUE INDEX if not exists books_pkey ON public.books USING btree (id);
 
-CREATE UNIQUE INDEX contents_pkey ON public.contents USING btree (id);
+CREATE UNIQUE INDEX if not exists contents_pkey ON public.contents USING btree (id);
 
-CREATE UNIQUE INDEX link_pkey ON public.link USING btree (id);
+CREATE UNIQUE INDEX if not exists link_pkey ON public.link USING btree (id);
 
 alter table "public"."attributes" add constraint "attributes_pkey" PRIMARY KEY using index "attributes_pkey";
 

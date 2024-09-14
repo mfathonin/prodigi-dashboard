@@ -11,12 +11,12 @@
     "supa:start": "bash -c 'source ./scripts/set_env.sh && npx supabase start'",
     "supa:stop": "bash -c 'npx supabase stop --no-backup && source ./scripts/clear_env.sh'",
     "supa:typegen": "bash -c 'source ./scripts/set_env.sh && npx supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" > models/supaservice.types.ts'",
-    "supa:check": "bash -c 'source ./scripts/set_env.sh && echo \"App Link: $NEXT_PUBLIC_SUPABASE_URL\" && npx supabase status'",
+    "supa:check": "bash -c 'source ./scripts/set_env.sh && echo \"App Link: $NEXT_PUBLIC_SUPABASE_URL\nDB URL: $SUPABASE_DB_URL\" && npx supabase status'",
     "supa:db:backup": "bash -c 'source ./scripts/set_env.sh && source ./scripts/prepare_backup.sh \"$1\" && npx supabase db dump --data-only -f \"supabase/backups/$BACKUP_FILENAME\" --db-url \"$SUPABASE_DB_URL\"' --",
-    "supa:migration": "npx supabase migration list",
+    "supa:migration": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase migration list --db-url \"$SUPABASE_DB_URL\"'",
     "supa:migration:repair": "node scripts/migration-repair.js",
     "supa:migration:pull": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase db diff -f \"${1:-diff}\" --db-url \"$SUPABASE_DB_URL\"' --",
-    "supa:migration:push": "bash -c 'source ./scripts/set_env.sh && npx supabase db push'",
+    "supa:migration:push": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase db push --db-url \"$SUPABASE_DB_URL\" --debug --include-all'",
     "supa:migration:down": "bash -c 'source ./scripts/set_env.sh && node scripts/migration-down.js \"$@\"' --"
   },
   "dependencies": {
@@ -65,6 +65,7 @@
     "jszip": "^3.10.1",
     "postcss": "^8",
     "qrcode": "^1.5.3",
+    "readline-sync": "^1.4.10",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

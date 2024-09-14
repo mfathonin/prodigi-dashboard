@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
+const readlineSync = require("readline-sync");
 
 const downMigrationsDir = path.join(
   __dirname,
@@ -37,7 +38,25 @@ function runMigrationDown(file) {
   console.log(`Running down migration: ${file}`);
   try {
     if (isPsqlAvailable()) {
-      execSync(`psql -d $SUPABASE_DB_URL -f "${filePath}"`, {
+      // Confirm the database URL before running the migration
+      const dbUrl = process.env.SUPABASE_DB_URL;
+      // Extract the user, hide the password with ****, and replace the host with <hidden>
+      const dbUrlWithoutPassword = dbUrl?.replace(
+        /(\w.*):\/\/(\w.*)\:(\w.+)\@(\w.*)\:(\w.+)\//,
+        "$1://$2:[Password_DB]@[Host_DB]:$5"
+      );
+
+      console.log(`\n\nConnecting to database:\n${dbUrlWithoutPassword}\n`);
+      const confirmation = readlineSync.question(
+        `Do you want to proceed with this database? (y/n): `
+      );
+
+      if (confirmation.toLowerCase() !== "y") {
+        console.log("Migration cancelled by user.");
+        process.exit(0);
+      }
+
+      execSync(`psql -d "${dbUrl}" -f "${filePath}"`, {
         stdio: "inherit",
       });
 
