@@ -5,6 +5,7 @@ import Image from "next/image";
 import { DownloadPage } from "./components/download-page";
 import { Redirector } from "./components/redirector";
 import { DownloadButton } from "./components/download-button";
+import { redirect } from "next/navigation";
 
 export default async function LinkPage({
   params,
@@ -18,6 +19,9 @@ export default async function LinkPage({
 
   if (!linkPath) return <DownloadPage />;
 
+  if (appSignature === process.env.NEXT_PUBLIC_APP_ID) {
+    redirect(`/api/v1/links/${linkPath}?app=${appSignature}`);
+  }
   const supabase = createClient();
   const contentRepo = new ContentsRepository(supabase);
 
@@ -35,14 +39,10 @@ export default async function LinkPage({
           <p className="text-lg font-semibold">{contentWithLink.title}</p>
         </div>
 
-        {appSignature === process.env.NEXT_PUBLIC_APP_ID ? (
-          <Redirector link={contentWithLink.link.targetUrl} />
-        ) : (
-          <div className="flex flex-col items-center">
-            <p className="mb-3">Buka dari aplikasi Prodigi!</p>
-            <DownloadButton />
-          </div>
-        )}
+        <div className="flex flex-col items-center">
+          <p className="mb-3">Buka dari aplikasi Prodigi!</p>
+          <DownloadButton />
+        </div>
       </div>
     );
   } catch (e) {
