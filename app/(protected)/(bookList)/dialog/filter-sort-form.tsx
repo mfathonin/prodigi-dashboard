@@ -55,6 +55,9 @@ export const FilterSortForm = ({
     const processedData: FilterSort = {
       ...data,
       filter: data.filter?.reduce((acc, curr) => {
+        if (curr === "none") {
+          acc.push(curr);
+        }
         if (!acc.includes(curr)) {
           acc.push(curr);
         }
@@ -132,25 +135,69 @@ export const FilterSortForm = ({
           <FormField
             control={form.control}
             name="filter"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex justify-between items-center">
-                  <p>Filter Atribut</p>
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      field.onChange(field.value ? [...field.value, ""] : [""]);
-                    }}
-                    size="icon"
-                    variant="ghost"
-                  >
-                    <i className="bx bx-plus" />
-                  </Button>
-                </FormLabel>
-                <AttributeSelector field={field} />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const isNoAttribute = field.value?.some((v) => v === "none");
+              const isFilterActive = field.value?.some((v) => v !== "none");
+
+              return (
+                <FormItem>
+                  <FormLabel className="flex justify-between items-center">
+                    <p>Filter Atribut</p>
+                    <div className="flex gap-3">
+                      <div
+                        className={`cursor-${
+                          isFilterActive ? "not-allowed" : "pointer"
+                        }`}
+                      >
+                        <Button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (isNoAttribute) {
+                              field.onChange([""]);
+                            } else {
+                              field.onChange(["none"]);
+                            }
+                          }}
+                          disabled={isFilterActive}
+                          size="sm"
+                          variant="secondary"
+                        >
+                          {isNoAttribute ? "Dengan" : "Tanpa"} Atribut
+                        </Button>
+                      </div>
+                      <div
+                        className={`cursor-${
+                          isNoAttribute ? "not-allowed" : "pointer"
+                        }`}
+                      >
+                        <Button
+                          disabled={isNoAttribute}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            field.onChange(
+                              field.value ? [...field.value, ""] : [""]
+                            );
+                          }}
+                          size="icon-sm"
+                          variant="default"
+                        >
+                          <i className="bx bx-plus" />
+                        </Button>
+                      </div>
+                    </div>
+                  </FormLabel>
+                  {isNoAttribute ? (
+                    <p className="text-sm text-center py-6">
+                      Anda akan mencari buku yang belum memiliki atribut
+                    </p>
+                  ) : (
+                    <AttributeSelector field={field} />
+                  )}
+                </FormItem>
+              );
+            }}
           />
         </div>
         <div className="flex justify-between">

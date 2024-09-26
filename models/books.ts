@@ -23,7 +23,7 @@ export type BooksContentsCount = Awaited<
 
 export type QueryOptions = {
   search: string | undefined;
-  filter: string[] | undefined;
+  filter: string[] | ["none"] | undefined;
   sortBy: string;
   orderBy: string;
 };

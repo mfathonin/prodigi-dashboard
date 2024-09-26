@@ -24,17 +24,41 @@ export class BookRepository implements Book {
   }
 
   async getBooks(queryOptions?: QueryOptions) {
-    const filter = queryOptions?.filter ?? [];
+    const { filter } = queryOptions ?? {};
     let filteredBookIds: string[] = [];
-    if (filter && filter.length > 0) {
+    const isNoAttribute = filter?.includes("none");
+    const isFilterActive = (filter && filter.length > 0) || isNoAttribute;
+
+    if (isNoAttribute) {
+      const { data, error } = await this.db
+        .from("books")
+        .select("*, attributes:books_attributes(id)");
+
+      if (error) throw error;
+      filteredBookIds = data
+        .filter((d: any) => d.attributes.length === 0)
+        .map((d: any) => d.uuid);
+    } else if (filter && filter.length > 0 && !isNoAttribute) {
+      const regex =
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+      const filtered = filter.filter((id: string) => regex.test(id));
+
       const { data, error } = await this.db
         .from("books_attributes")
         .select("book_id")
-        .in("attribute_id", filter);
+        .in("attribute_id", filtered);
+
       if (error) throw error;
+
       filteredBookIds = data.map((d: any) => d.book_id);
     }
 
+    // If no book is found with the applied filter, return an empty book list
+    if (isFilterActive && filteredBookIds.length === 0) {
+      return [];
+    }
+
+    // Start building the query for Search and Sort
     const query = this.db.from("books").select("*, contents (id)");
 
     if (queryOptions) {
@@ -42,10 +66,12 @@ export class BookRepository implements Book {
       if (search) {
         query.ilike("title", `%${search}%`);
       }
-      if (filteredBookIds.length > 0) query.in("uuid", filteredBookIds);
-
-      if (sortBy && orderBy)
+      if (isFilterActive) {
+        query.in("uuid", filteredBookIds);
+      }
+      if (sortBy && orderBy) {
         query.order(sortBy, { ascending: orderBy === "asc" });
+      }
     }
 
     const response = await query;

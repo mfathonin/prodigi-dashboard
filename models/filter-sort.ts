@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const filterSortSchema = z.object({
   filter: z
-    .array(z.string().uuid("Pilih salah satu atau hapus atribut"))
+    .array(z.string().min(4, "Pilih salah satu atau hapus atribut"))
     .optional(),
   sort: z
     .object({
