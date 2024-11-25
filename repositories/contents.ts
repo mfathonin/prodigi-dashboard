@@ -71,6 +71,8 @@ export class ContentsRepository implements Contents {
       link_id: updatedLink?.uuid,
       book_id: content.bookId,
     };
+    if (content.uuid === "")
+      Object.assign(contentWithLink, { type: content.type });
 
     const response = await this._db
       .from("contents")
@@ -88,15 +90,38 @@ export class ContentsRepository implements Contents {
     return savedContents;
   }
 
-  // TODO: implement quiz upsert and add return type for this method
-  async upsertQuiz(content: ContentUpdateForm) {
-    console.log("upsert quiz", content);
-    // TODO: implement quiz upsert
+  async upsertQuiz(content: QuizUpdateForm): Promise<BookContentsLink> {
     // 1. create new answerSheet -> title, nQuestion, nOptions, answers, book_id
+    const { nQuestion, nOptions, ...contentData } = content;
+
+    const answerSheetData = {
+      book_id: contentData.bookId,
+      counts: nQuestion,
+      answers: Array(nQuestion).fill(0),
+      n_options: Array(nQuestion).fill(nOptions),
+      points: Array(nQuestion).fill(1),
+    };
+
+    const answerSheetResponse = await this._db
+      .from("answer_sheets")
+      .upsert(answerSheetData)
+      .select("id, uuid")
+      .single();
+
+    if (answerSheetResponse.error) throw answerSheetResponse.error;
+
     // 2. compose targetUrl for link -> /quiz/${answerSheet.id}
-    // 3. create content with that targetUrl, then continue with existing flow like in upsertContentLink
-    // 4. create new link -> path, targetUrl, book_id
-    // return this.upsertContentLink(content);
+    const answerSheetId = answerSheetResponse.data.uuid;
+    const targetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${answerSheetId}`;
+
+    // 3. continue with existing flow like in upsertContentLink
+    const contentWithLink = await this.upsertContentLink({
+      ...contentData,
+      targetUrl,
+      type: "quiz",
+    });
+
+    return contentWithLink;
   }
 
   async deleteContentsLink(contentId: string): Promise<void> {

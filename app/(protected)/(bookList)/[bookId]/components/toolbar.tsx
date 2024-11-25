@@ -8,6 +8,7 @@ import {
   BooksContentsCount,
   ContentUpdateForm,
   ExternalContentUpdateForm,
+  QuizUpdateForm,
 } from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
 import { useParams, useRouter } from "next/navigation";
@@ -51,9 +52,9 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
     content: ContentUpdateForm,
     supabase: SupabaseClient
   ) => {
-    console.log("add quiz", content);
-
-    // await new ContentsRepository(supabase).upsertQuiz(content);
+    await new ContentsRepository(supabase).upsertQuiz(
+      content as QuizUpdateForm
+    );
   };
 
   const handleAddContent = () => {

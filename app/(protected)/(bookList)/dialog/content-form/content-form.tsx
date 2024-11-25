@@ -93,8 +93,6 @@ export const ContentForm = ({
           <Tabs
             defaultValue="content"
             onValueChange={(val) => {
-              if (isEditing) return;
-
               resetFormOnTypeChange(form, val as ContentType);
             }}
           >
@@ -185,10 +183,12 @@ export const ContentForm = ({
 
               {/* QR Preview */}
               <div className="col-span-2 flex flex-col gap-y-4 px-2 items-end w-full">
-                <TabsList>
-                  <TabsTrigger value="content">Link</TabsTrigger>
-                  <TabsTrigger value="quiz">Kuis</TabsTrigger>
-                </TabsList>
+                {!isEditing && (
+                  <TabsList>
+                    <TabsTrigger value="content">Link</TabsTrigger>
+                    <TabsTrigger value="quiz">Kuis</TabsTrigger>
+                  </TabsList>
+                )}
                 <div className="w-full flex flex-col gap-4 items-center justify-start">
                   <canvas
                     ref={qrCanvas}
