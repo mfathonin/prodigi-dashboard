@@ -1,3 +1,5 @@
+"use server";
+
 import { Database } from "@/models/supaservice.types";
 import { createClient } from "@supabase/supabase-js";
 

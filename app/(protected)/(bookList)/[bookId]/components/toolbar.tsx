@@ -4,10 +4,15 @@ import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes } from "@/lib/utils";
-import { BooksContentsCount, ContentUpdateForm } from "@/models";
+import {
+  BooksContentsCount,
+  ContentUpdateForm,
+  ExternalContentUpdateForm,
+} from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
 import { useParams, useRouter } from "next/navigation";
 import { useDialog } from "../../dialog/provider";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 const {
   CANVAS_QR_PREFIX_ID,
@@ -31,6 +36,26 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
     downloadQRCodes(QRData, book.title!);
   };
 
+  const addContent = async (
+    content: ContentUpdateForm,
+    supabase: SupabaseClient
+  ) => {
+    if (!content.targetUrl) throw new Error("Target URL is required");
+
+    await new ContentsRepository(supabase).upsertContentLink(
+      content as ExternalContentUpdateForm
+    );
+  };
+
+  const addQuiz = async (
+    content: ContentUpdateForm,
+    supabase: SupabaseClient
+  ) => {
+    console.log("add quiz", content);
+
+    // await new ContentsRepository(supabase).upsertQuiz(content);
+  };
+
   const handleAddContent = () => {
     const _content: ContentUpdateForm = {
       ...EMPTY_CONTENT_TEMPLATE,
@@ -44,9 +69,15 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
         ).createClient();
 
         // console.log("on create content link", { result });
-        await new ContentsRepository(supabase).upsertContentLink(
-          result as ContentUpdateForm
-        );
+
+        switch ((result as ContentUpdateForm).type) {
+          case "content":
+            await addContent(result as ContentUpdateForm, supabase);
+            break;
+          case "quiz":
+            await addQuiz(result as ContentUpdateForm, supabase);
+            break;
+        }
 
         router.refresh();
       }

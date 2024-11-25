@@ -30,5 +30,6 @@ export const constants = {
     linkId: -1,
     id: -1,
     uuid: "",
+    type: "content",
   } satisfies ContentUpdateForm,
 };
