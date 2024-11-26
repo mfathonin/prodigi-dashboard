@@ -99,9 +99,19 @@ export const ContentForm = ({
               resetFormOnTypeChange(form, val as ContentType);
             }}
           >
-            <div className="grid w-full grid-cols-5 space-x-4">
+            <div className="grid w-full grid-cols-5 gap-x-4">
               {/* Editor */}
-              <div className="col-span-3 flex flex-col gap-y-3">
+              <div className="col-span-5 mb-6 md:col-span-3 md:mb-0 flex flex-col gap-y-3">
+                {!isEditing && (
+                  <TabsList className="md:hidden">
+                    <TabsTrigger className="w-full" value="content">
+                      Link
+                    </TabsTrigger>
+                    <TabsTrigger className="w-full" value="quiz">
+                      Kuis
+                    </TabsTrigger>
+                  </TabsList>
+                )}
                 <FormField
                   control={form.control}
                   name="title"
@@ -192,9 +202,9 @@ export const ContentForm = ({
               </div>
 
               {/* QR Preview */}
-              <div className="col-span-2 flex flex-col gap-y-4 px-2 items-end w-full">
+              <div className="col-span-5 md:col-span-2 flex flex-col gap-y-4 px-2 items-end w-full">
                 {!isEditing && (
-                  <TabsList>
+                  <TabsList className="hidden md:block">
                     <TabsTrigger value="content">Link</TabsTrigger>
                     <TabsTrigger value="quiz">Kuis</TabsTrigger>
                   </TabsList>
