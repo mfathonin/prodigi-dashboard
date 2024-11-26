@@ -6,6 +6,7 @@ export const constants = {
       content: "URL",
       quiz: "Kuis",
     },
+    OPTIONS_LABEL: ["A", "B", "C", "D", "E"],
   },
   CANVAS_QR_PREFIX_ID: "canvas-qr-",
   errors: {

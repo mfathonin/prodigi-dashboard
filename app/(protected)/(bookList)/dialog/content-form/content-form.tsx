@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { constants } from "@/lib/constants";
 import { getLinks } from "@/lib/utils";
 import { contentSchema, ContentType, ContentUpdateForm } from "@/models";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,14 +20,16 @@ import { toCanvas } from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import { ControllerRenderProps, useForm } from "react-hook-form";
 import {
-  generatePath,
   onNumberValueChange,
   onSubmit,
   onTitleChange,
   parseErrors,
   resetFormOnTypeChange,
 } from "./handler";
-import { label } from "./constants";
+
+const {
+  CONTENT: { OPTIONS_LABEL },
+} = constants;
 
 type ContentFormProps = {
   content: Partial<ContentUpdateForm>;
@@ -138,40 +141,47 @@ export const ContentForm = ({
                   <div className="h-[68px] w-full"></div>
                 </TabsContent>
                 <TabsContent value="quiz" className="flex flex-col m-0 gap-y-3">
-                  <FormField
-                    control={form.control}
-                    name="nQuestion"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Jumlah soal</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            onChange={onNumberValueChange(field)}
-                            placeholder="Jumlah soal"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="nOptions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Jumlah opsi</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Jumlah opsi"
-                            onChange={onNumberValueChange(field)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="flex gap-x-3 w-full">
+                    <FormField
+                      control={form.control}
+                      name="nQuestion"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Jumlah soal</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={onNumberValueChange(field)}
+                              placeholder="Jumlah soal"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="nOptions"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Jumlah opsi</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="Jumlah opsi"
+                              inputMode="numeric"
+                              type="number"
+                              onChange={onNumberValueChange(field)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <OptionViewer nOptions={form.watch("nOptions") ?? 0} />
                 </TabsContent>
                 <Separator className="mt-2" />
                 <FormField
@@ -279,5 +289,39 @@ const AliasEditor = ({
       </div>
       <FormMessage />
     </FormItem>
+  );
+};
+
+const OptionViewer = ({ nOptions }: { nOptions: number }) => {
+  let viewer: React.ReactNode = (
+    <p className="text-xs w-full text-center opacity-60">
+      Mohon isi jumlah opsi jawaban
+    </p>
+  );
+
+  if (nOptions === 2)
+    viewer = (
+      <>
+        <Button className="text-green-500 flex-1">Benar</Button>
+        <Button className="text-red-500 flex-1">Salah</Button>
+      </>
+    );
+
+  if (nOptions > 2 && nOptions <= 5)
+    viewer = (
+      <>
+        {Array.from({ length: nOptions }).map((_, i) => (
+          <Button className="flex-1" key={i}>
+            {OPTIONS_LABEL[i]}
+          </Button>
+        ))}
+      </>
+    );
+
+  return (
+    <div className="flex flex-col gap-y-2 justify-between h-[68px]">
+      <p className="text-sm">Tampilan Opsi Jawaban</p>
+      <div className="flex gap-x-2">{viewer}</div>
+    </div>
   );
 };

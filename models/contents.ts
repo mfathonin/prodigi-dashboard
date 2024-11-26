@@ -17,7 +17,11 @@ export const contentSchema = z
     title: z.string().min(1, "Judul tidak boleh kosong"),
 
     nQuestion: z.number().min(1, "Jumlah soal tidak boleh kosong").optional(),
-    nOptions: z.number().min(2, "Jumlah opsi harus lebih dari 1").optional(),
+    nOptions: z
+      .number()
+      .min(2, "Jumlah opsi harus lebih dari 1")
+      .max(5, "Jumlah opsi tidak boleh lebih dari 5")
+      .optional(),
 
     targetUrl: z.string().optional(),
   })
