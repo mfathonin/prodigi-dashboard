@@ -5,36 +5,40 @@ import { unstable_cache } from "next/cache";
 import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 
-const getUsers = unstable_cache(async () => {
-  const supabaseAdmin = createAdminClient();
+const getUsers = unstable_cache(
+  async () => {
+    const supabaseAdmin = await createAdminClient();
 
-  // Fetch users from Supabase
-  const { data: users, error: usersError } =
-    await supabaseAdmin.auth.admin.listUsers();
+    // Fetch users from Supabase
+    const { data: users, error: usersError } =
+      await supabaseAdmin.auth.admin.listUsers();
 
-  if (usersError) {
-    console.error("Error fetching users:", usersError);
-    throw usersError;
-  }
+    if (usersError) {
+      console.error("Error fetching users:", { usersError, supabaseAdmin });
+      throw usersError;
+    }
 
-  // Fetch user roles
-  const { data: userRoles, error: rolesError } = await supabaseAdmin
-    .from("user_roles")
-    .select("*");
+    // Fetch user roles
+    const { data: userRoles, error: rolesError } = await supabaseAdmin
+      .from("user_roles")
+      .select("*");
 
-  if (rolesError) {
-    console.error("Error fetching user roles:", rolesError);
-    throw rolesError;
-  }
+    if (rolesError) {
+      console.error("Error fetching user roles:", rolesError);
+      throw rolesError;
+    }
 
-  // Combine user data with roles
-  const usersWithRoles: ExtendedUser[] = users.users.map((user) => ({
-    ...user,
-    user_roles: userRoles.filter((role) => role.id === user.id),
-  }));
+    // Combine user data with roles
+    const usersWithRoles: ExtendedUser[] = users.users.map((user) => ({
+      ...user,
+      user_roles: userRoles.filter((role) => role.id === user.id),
+    }));
 
-  return usersWithRoles;
-});
+    return usersWithRoles;
+  },
+  ["users"],
+  { tags: ["users"] }
+);
 
 export default async function UsersPage() {
   await checkAdminAccess();
