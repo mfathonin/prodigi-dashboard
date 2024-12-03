@@ -6,6 +6,11 @@ import { DownloadPage } from "./components/download-page";
 import { Redirector } from "./components/redirector";
 import { DownloadButton } from "./components/download-button";
 import { redirect } from "next/navigation";
+import { Metadata } from "next/types";
+
+export const metadata: Metadata = {
+  title: "Prodigi | Links",
+};
 
 export default async function LinkPage({
   params,

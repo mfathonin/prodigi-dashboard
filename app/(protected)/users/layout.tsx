@@ -1,4 +1,9 @@
 import { InviteUserButton } from "./components/invite-user-button";
+import { Metadata } from "next/types";
+
+export const metadata: Metadata = {
+  title: "Prodigi | Users Management",
+};
 
 export default function UsersLayout({
   children,

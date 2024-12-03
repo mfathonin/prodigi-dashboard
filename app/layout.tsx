@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Prodigi | Dashboard",
+  title: "Prodigi",
   description: "Dashboard for managing digital content in Prodigi App",
   icons: "/favicon.png",
 };

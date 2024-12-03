@@ -1,5 +1,10 @@
 import { Toolbar } from "./components/toolbar";
 import { BannerDialogProvider } from "./dialog-context";
+import { Metadata } from "next/types";
+
+export const metadata: Metadata = {
+  title: "Prodigi | Banner Management",
+};
 
 export default function BannerLayout({
   children,

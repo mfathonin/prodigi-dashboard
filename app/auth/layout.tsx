@@ -4,7 +4,7 @@ import { FullLogo } from "@/components/ui/full-logo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Prodigi - Authentication",
+  title: "Prodigi | Authentication",
 };
 
 export default function AuthLayout({
