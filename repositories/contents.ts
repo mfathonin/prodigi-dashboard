@@ -154,4 +154,32 @@ export class ContentsRepository implements Contents {
 
     return data;
   }
+
+  async getContentLinkByTargetUrl(
+    targetUrl: string
+  ): Promise<BookContentsLink> {
+    const response = await this._db
+      .from("link")
+      .select("*")
+      .eq("target_url", targetUrl)
+      .single();
+    if (response.error) throw response.error;
+
+    const contentResponse = await this._db
+      .from("contents")
+      .select("*")
+      .eq("link_id", response.data.uuid)
+      .single();
+    if (contentResponse.error) throw contentResponse.error;
+
+    const data: BookContentsLink = {
+      ...contentResponse.data,
+      link: {
+        ...response.data,
+        targetUrl: response.data.target_url,
+      },
+    };
+
+    return data;
+  }
 }

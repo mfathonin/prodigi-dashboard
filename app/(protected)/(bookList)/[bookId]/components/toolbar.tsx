@@ -4,16 +4,10 @@ import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes } from "@/lib/utils";
-import {
-  BooksContentsCount,
-  ContentUpdateForm,
-  ExternalContentUpdateForm,
-  QuizUpdateForm,
-} from "@/models";
-import { ContentsRepository } from "@/repositories/contents";
+import { BooksContentsCount, ContentUpdateForm } from "@/models";
 import { useParams, useRouter } from "next/navigation";
 import { useDialog } from "../../dialog/provider";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { handleContentForm } from "./handler";
 
 const {
   CANVAS_QR_PREFIX_ID,
@@ -37,26 +31,6 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
     downloadQRCodes(QRData, book.title!);
   };
 
-  const addContent = async (
-    content: ContentUpdateForm,
-    supabase: SupabaseClient
-  ) => {
-    if (!content.targetUrl) throw new Error("Target URL is required");
-
-    await new ContentsRepository(supabase).upsertContentLink(
-      content as ExternalContentUpdateForm
-    );
-  };
-
-  const addQuiz = async (
-    content: ContentUpdateForm,
-    supabase: SupabaseClient
-  ) => {
-    await new ContentsRepository(supabase).upsertQuiz(
-      content as QuizUpdateForm
-    );
-  };
-
   const handleAddContent = () => {
     const _content: ContentUpdateForm = {
       ...EMPTY_CONTENT_TEMPLATE,
@@ -65,21 +39,7 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
       if (result) {
-        const supabase = (
-          await import("@/lib/supaclient/client")
-        ).createClient();
-
-        // console.log("on create content link", { result });
-
-        switch ((result as ContentUpdateForm).type) {
-          case "content":
-            await addContent(result as ContentUpdateForm, supabase);
-            break;
-          case "quiz":
-            await addQuiz(result as ContentUpdateForm, supabase);
-            break;
-        }
-
+        handleContentForm(result as ContentUpdateForm);
         router.refresh();
       }
     });
