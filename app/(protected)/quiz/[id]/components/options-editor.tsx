@@ -93,11 +93,9 @@ export const SaveButton = () => {
         size="sm"
         variant="outline"
         disabled={pending}
-        className="rounded-full hover:text-green-500 dark:hover:text-green-400 sticky top-20 -translate-x-4"
+        className="rounded-full bg-sky-500 dark:bg-sky-900 hover:bg-sky-600 dark:hover:bg-sky-700 text-white hover:text-white sticky top-20 -translate-x-4"
       >
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 me-1.5">
-          Simpan Jawaban
-        </p>
+        <p className="text-xs text-white ms-1 me-1.5">Simpan Jawaban</p>
         <i className="bx bx-check text-xl" />
       </Button>
     </div>

@@ -307,7 +307,19 @@ const AliasEditor = ({
   );
 };
 
+const selectedOptionStyle =
+  "bg-green-500 hover:bg-green-500 text-white hover:text-white flex-1";
+const defaultOptionStyle = "hover:bg-zinc-100 flex-1";
+
 const OptionViewer = ({ nOptions }: { nOptions: number }) => {
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+  const handleSelect = (index: number) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setSelectedOption(index);
+  };
+
   let viewer: React.ReactNode = (
     <p className="text-xs w-full text-center opacity-60">
       Mohon isi jumlah opsi jawaban
@@ -317,8 +329,24 @@ const OptionViewer = ({ nOptions }: { nOptions: number }) => {
   if (nOptions === 2)
     viewer = (
       <>
-        <Button className="text-green-500 flex-1">Benar</Button>
-        <Button className="text-red-500 flex-1">Salah</Button>
+        <Button
+          variant="outline"
+          className={
+            selectedOption === 0 ? selectedOptionStyle : defaultOptionStyle
+          }
+          onClick={handleSelect(0)}
+        >
+          Benar
+        </Button>
+        <Button
+          variant="outline"
+          className={
+            selectedOption === 1 ? selectedOptionStyle : defaultOptionStyle
+          }
+          onClick={handleSelect(1)}
+        >
+          Salah
+        </Button>
       </>
     );
 
@@ -326,7 +354,14 @@ const OptionViewer = ({ nOptions }: { nOptions: number }) => {
     viewer = (
       <>
         {Array.from({ length: nOptions }).map((_, i) => (
-          <Button className="flex-1" key={i}>
+          <Button
+            variant="outline"
+            className={
+              selectedOption === i ? selectedOptionStyle : defaultOptionStyle
+            }
+            key={i}
+            onClick={handleSelect(i)}
+          >
             {OPTIONS_LABEL[i]}
           </Button>
         ))}
