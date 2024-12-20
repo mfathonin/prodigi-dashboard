@@ -72,7 +72,8 @@ export const onNumberValueChange =
   (field: ControllerRenderProps<ContentUpdateForm, "nQuestion" | "nOptions">) =>
   (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
-    field.onChange(isNaN(val) ? 0 : val);
+    const isNegative = val < 0;
+    field.onChange(isNaN(val) || isNegative ? 0 : val);
   };
 
 export const parseErrors = (errors: FieldErrors<ContentUpdateForm>) => {

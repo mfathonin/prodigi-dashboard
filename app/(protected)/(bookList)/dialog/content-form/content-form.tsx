@@ -164,6 +164,9 @@ export const ContentForm = ({
                               value={field.value ?? ""}
                               onChange={onNumberValueChange(field)}
                               placeholder="Jumlah soal"
+                              inputMode="numeric"
+                              type="number"
+                              min={1}
                             />
                           </FormControl>
                           <FormMessage />
@@ -184,6 +187,8 @@ export const ContentForm = ({
                               inputMode="numeric"
                               type="number"
                               onChange={onNumberValueChange(field)}
+                              min={2}
+                              max={5}
                             />
                           </FormControl>
                           <FormMessage />

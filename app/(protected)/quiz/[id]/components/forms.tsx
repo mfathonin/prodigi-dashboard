@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useOptimistic, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { toast } from "sonner";
+import { getAnswerSheet } from "../handler";
 import {
   decreaseNOption,
   decreasePoints,
@@ -14,10 +17,7 @@ import {
   updateAnswerSheet,
   updateGeneralSettings,
 } from "./handler";
-import { useFormState, useFormStatus } from "react-dom";
 import { OptionsEditor, SaveButton } from "./options-editor";
-import { getAnswerSheet } from "../handler";
-import { toast } from "sonner";
 
 export const GeneralSettingsForm = ({
   answerSheetId,
@@ -47,6 +47,7 @@ export const GeneralSettingsForm = ({
           <Input
             type="number"
             name="counts"
+            min={1}
             defaultValue={counts}
             required
             placeholder="Jumlah Soal"
@@ -72,6 +73,7 @@ export const GeneralSettingsForm = ({
           <Input
             type="number"
             name="points"
+            min={1}
             placeholder="Points"
             required={bookId !== undefined}
           />
