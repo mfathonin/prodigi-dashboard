@@ -7,7 +7,7 @@ type QuizErrorProps = {
   reset: () => void;
 };
 
-export default function Error({ error, reset }: QuizErrorProps) {
+export default function QuizError({ error, reset }: QuizErrorProps) {
   return (
     <div className="flex w-full flex-col gap-4 p-4 py-6 rounded-lg bg-red-100 dark:bg-red-800/30 text-red-600 dark:text-white border border-red-500">
       <h1 className="flex items-center">
