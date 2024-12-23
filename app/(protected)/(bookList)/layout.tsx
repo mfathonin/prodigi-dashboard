@@ -2,6 +2,11 @@ import BookList from "./components/book-list";
 import { MiniBookSelector } from "./components/mini-book-selector";
 import { Toolbar } from "./components/toolbar";
 import { DialogProvider } from "./dialog/provider";
+import { Metadata } from "next/types";
+
+export const metadata: Metadata = {
+  title: "Prodigi | Book Management",
+};
 
 type BookListPageProps = {
   children: React.ReactNode;

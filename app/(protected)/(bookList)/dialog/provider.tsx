@@ -121,7 +121,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
       )}
       {dialogData && dialogType === "form" && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="w-[70dvw] max-w-3xl">
+          <DialogContent className="w-[calc(100dvw-20px)] md:w-[70dvw] max-w-3xl">
             {isFilterSort(dialogData) ? (
               <DialogHeader>
                 <DialogTitle>Filter dan Sortir</DialogTitle>

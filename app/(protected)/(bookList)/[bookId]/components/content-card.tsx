@@ -14,14 +14,19 @@ import {
   Books,
   ContentsLink,
   ContentUpdateForm,
+  ExternalContentUpdateForm,
 } from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
 import { useRouter } from "next/navigation";
 import { toCanvas } from "qrcode";
 import { useEffect, useRef } from "react";
 import { useDialog } from "../../dialog/provider";
+import { Badge } from "@/components/ui/badge";
 
-const { CANVAS_QR_PREFIX_ID } = constants;
+const {
+  CANVAS_QR_PREFIX_ID,
+  CONTENT: { LABEL },
+} = constants;
 
 export const ContentCard = ({
   book,
@@ -45,7 +50,15 @@ export const ContentCard = ({
     }
   }, [qrCanvas, link.path]);
 
-  const handleDeleteContent = async () => {
+  const handleDownloadQRCode = () => {
+    if (qrCanvas.current)
+      downloadQRCodes({
+        canvas: qrCanvas.current,
+        name: content.title!,
+      });
+  };
+
+  const handleDeleteContent = () => {
     const _content: ContentUpdateForm = {
       bookId: book.uuid,
       title: content.title,
@@ -54,6 +67,7 @@ export const ContentCard = ({
       linkId: link.id,
       id: content.id,
       uuid: content.uuid,
+      type: content.type,
     };
 
     dialog?.openDialog("alert", _content, async (result) => {
@@ -69,7 +83,7 @@ export const ContentCard = ({
     });
   };
 
-  const handleUpdateContent = async () => {
+  const handleUpdateContent = () => {
     const _content: ContentUpdateForm = {
       bookId: book.uuid,
       title: content.title,
@@ -78,6 +92,7 @@ export const ContentCard = ({
       linkId: link.id,
       id: content.id,
       uuid: content.uuid,
+      type: content.type,
     };
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
@@ -88,7 +103,7 @@ export const ContentCard = ({
 
         // console.log("on update content link", { result });
         await new ContentsRepository(supabase).upsertContentLink(
-          result as ContentUpdateForm
+          result as ExternalContentUpdateForm
         );
 
         router.refresh();
@@ -96,16 +111,32 @@ export const ContentCard = ({
     });
   };
 
+  const handleContentClick = () => {
+    switch (content.type) {
+      case "quiz":
+        if (link.targetUrl) window.open(link.targetUrl, "_blank");
+        break;
+      case "content":
+        handleUpdateContent();
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <>
       <div
         role="button"
         className="flex gap-10 items-start md:items-center justify-between rounded-lg p-4 w-full border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 cursor-pointer"
-        onClick={() => handleUpdateContent()}
+        onClick={handleContentClick}
       >
         <div className="flex flex-col w-full md:flex-row gap-x-10 gap-y-3">
-          <div className="flex-1">
-            <p className="text-sm">{content.title}</p>
+          <div className="flex flex-col flex-1 gap-y-2">
+            <div className="flex items-center gap-x-2">
+              <Badge variant={content.type}>{LABEL[content.type]}</Badge>
+              <p className="text-sm">{content.title}</p>
+            </div>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 line-clamp-1">
               {link.targetUrl}
             </p>
@@ -138,13 +169,7 @@ export const ContentCard = ({
             <MenuItems
               icon="bx bx-export"
               label="Download QR Code"
-              onClick={() => {
-                if (qrCanvas.current)
-                  downloadQRCodes({
-                    canvas: qrCanvas.current,
-                    name: content.title!,
-                  });
-              }}
+              onClick={handleDownloadQRCode}
             />
             <MenuItems
               icon="bx bx-trash"

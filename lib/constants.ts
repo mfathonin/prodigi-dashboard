@@ -1,6 +1,13 @@
 import { BookUpdateForm, ContentUpdateForm } from "@/models";
 
 export const constants = {
+  CONTENT: {
+    LABEL: {
+      content: "URL",
+      quiz: "Kuis",
+    },
+    OPTIONS_LABEL: ["A", "B", "C", "D", "E"],
+  },
   CANVAS_QR_PREFIX_ID: "canvas-qr-",
   errors: {
     auth: {
@@ -30,5 +37,6 @@ export const constants = {
     linkId: -1,
     id: -1,
     uuid: "",
+    type: "content",
   } satisfies ContentUpdateForm,
 };

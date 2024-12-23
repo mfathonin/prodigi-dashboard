@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { constants } from "@/lib/constants";
 import { ContentUpdateForm } from "@/models";
-import { ContentsRepository } from "@/repositories/contents";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useDialog } from "../../dialog/provider";
+import { handleContentForm } from "./handler";
 
 const { EMPTY_CONTENT_TEMPLATE } = constants;
 
@@ -23,15 +23,7 @@ export const NoContent = () => {
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
       if (result) {
-        const supabase = (
-          await import("@/lib/supaclient/client")
-        ).createClient();
-
-        // console.log("on create content link", { result });
-        await new ContentsRepository(supabase).upsertContentLink(
-          result as ContentUpdateForm
-        );
-
+        await handleContentForm(result as ContentUpdateForm);
         router.refresh();
       }
     });
