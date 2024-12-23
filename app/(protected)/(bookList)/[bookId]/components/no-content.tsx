@@ -23,8 +23,7 @@ export const NoContent = () => {
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
       if (result) {
-        handleContentForm(result as ContentUpdateForm);
-
+        await handleContentForm(result as ContentUpdateForm);
         router.refresh();
       }
     });

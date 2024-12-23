@@ -68,3 +68,47 @@ export type BookContentsLink = Awaited<
 >[0];
 
 export type ContentsLink = BookContentsLink["link"];
+
+export function isExternalContent(
+  content: ContentUpdateForm
+): content is ExternalContentUpdateForm {
+  return content.type === "content" && !!content.targetUrl;
+}
+
+export function validateExternalContent(
+  content: ContentUpdateForm
+): content is ExternalContentUpdateForm {
+  const requiredFields = {
+    targetUrl: "Target URL is required",
+    title: "Title is required",
+    bookId: "Book ID is required",
+  };
+
+  const missingFields = Object.entries(requiredFields)
+    .filter(([field]) => !content[field as keyof ContentUpdateForm])
+    .map(([, message]) => message);
+
+  if (missingFields.length > 0) {
+    throw new Error(`Validation failed: ${missingFields.join(", ")}`);
+  }
+
+  return true;
+}
+
+export function isQuizContent(
+  content: ContentUpdateForm
+): content is QuizUpdateForm {
+  return (
+    content.type === "quiz" &&
+    typeof content.nQuestion === "number" &&
+    typeof content.nOptions === "number"
+  );
+}
+
+export function validateQuizContent(
+  content: ContentUpdateForm
+): content is QuizUpdateForm {
+  return (
+    isQuizContent(content) && content.nQuestion > 0 && content.nOptions > 0
+  );
+}
