@@ -6,7 +6,7 @@ CREATE TABLE public.answer_sheets (
   "counts" integer NOT NULL CHECK (counts > 0),
   "answers" integer [] NOT NULL CHECK (array_position(answers, NULL) IS NULL AND array_length(answers, 1) = counts),
   "points" integer [] NOT NULL CHECK (array_position(answers, NULL) IS NULL AND array_length(answers, 1) = counts),
-  "n_options" integer [] NOT NULL CHECK (array_position(answers, NULL) IS NULL AND array_length(answers, 1) = counts),,
+  "n_options" integer [] NOT NULL CHECK (array_position(answers, NULL) IS NULL AND array_length(answers, 1) = counts),
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );

@@ -6,10 +6,8 @@ import {
 } from "@/components/ui/accordion";
 import { notFound } from "next/navigation";
 import { AnswerConfigForm, GeneralSettingsForm } from "./components/forms";
-import { OptionsEditor } from "./components/options-editor";
 import QuestionConfig from "./components/question-config";
 import { getAnswerSheet } from "./handler";
-import { updateAnswerSheet } from "./components/handler";
 
 export default async function QuizPage({ params }: { params: { id: string } }) {
   const answerSheet = await getAnswerSheet(params.id);
@@ -17,12 +15,21 @@ export default async function QuizPage({ params }: { params: { id: string } }) {
   if (!answerSheet) return notFound();
 
   const questions = Array(answerSheet.counts).fill(0);
-  const getData = (index: number) => ({
-    id: answerSheet.uuid,
-    nOptions: answerSheet.n_options[index] ?? 0,
-    points: answerSheet.points[index] ?? 0,
-    answer: answerSheet.answers[index] ?? 0,
-  });
+  const getData = (index: number) => {
+    if (
+      !Array.isArray(answerSheet.n_options) ||
+      !Array.isArray(answerSheet.points) ||
+      !Array.isArray(answerSheet.answers)
+    ) {
+      throw new Error("Invalid answer sheet data structure");
+    }
+    return {
+      id: answerSheet.uuid,
+      nOptions: answerSheet.n_options[index] ?? 0,
+      points: answerSheet.points[index] ?? 0,
+      answer: answerSheet.answers[index] ?? 0,
+    };
+  };
 
   return (
     <div className="flex flex-col w-full gap-6">

@@ -4,6 +4,7 @@ import { ContentsRepository } from "@/repositories/contents";
 import { getAnswerSheet } from "./handler";
 import NotFound from "./not-found";
 import { Metadata } from "next";
+import { toast } from "sonner";
 
 export const metadata: Metadata = {
   title: "Prodigi | Worksheet Management",
@@ -32,8 +33,19 @@ export default async function QuizLayout({
   const bookRepo = new BookRepository(supabase);
   const book = await bookRepo.getBook(contentLink.book_id);
 
-  const answerSheet = await getAnswerSheet(params.id);
-  const totalPoints = answerSheet?.points.reduce((acc, curr) => acc + curr, 0);
+  let answerSheet;
+  try {
+    answerSheet = await getAnswerSheet(params.id);
+  } catch (error) {
+    console.error("Failed to fetch answer sheet:", error);
+    if (error instanceof Error)
+      toast.error("Gagal memuat data lembar jawaban", {
+        description: error.message,
+      });
+  }
+
+  const totalPoints =
+    answerSheet?.points?.reduce((acc, curr) => acc + curr, 0) ?? 0;
 
   var subTitle = `${book?.title} • _ _ • _ _`;
   if (answerSheet?.counts) {
