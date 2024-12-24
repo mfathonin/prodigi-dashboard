@@ -5,7 +5,7 @@ export const NoMatchSearch = ({
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) => {
-  const serachQuery = searchParams["content"] as string;
+  const searchQuery = searchParams["content"] as string;
 
   return (
     <div className="flex-grow flex items-center justify-center">
@@ -21,7 +21,7 @@ export const NoMatchSearch = ({
           <p className="font-medium">Konten digital yang ada cari tidak ada</p>
           <p className="text-xs text-zinc-700 dark:text-zinc-200 opacity-60 mt-1">
             Belum terdapat konten digital yang sesuai dengan kata kunci:{" "}
-            {`"${serachQuery}"`}
+            {`"${searchQuery}"`}
           </p>
         </div>
       </div>

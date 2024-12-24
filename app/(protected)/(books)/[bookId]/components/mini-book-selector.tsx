@@ -19,9 +19,7 @@ export const MiniBookSelector = async ({
   const bookRepo = new BookRepository(supabase);
   const books = await bookRepo.getBooks();
 
-  const selectedBookTitle = !!bookId
-    ? books.find((book) => book.uuid === bookId)?.title
-    : undefined;
+  const selectedBookTitle = books.find((book) => book.uuid === bookId)?.title;
 
   const isSelected = (id: string) => id === bookId;
 
