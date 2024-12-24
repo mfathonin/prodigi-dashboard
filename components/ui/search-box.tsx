@@ -43,7 +43,7 @@ export const SearchBox = ({
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const serachQuery = e.target.value;
+    const serachQuery = e.target.value.trim();
     const path = generatePathWithSearchParam(searchKey, serachQuery);
 
     if (timeout) {

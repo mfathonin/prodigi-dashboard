@@ -20,7 +20,7 @@ import { ContentsRepository } from "@/repositories/contents";
 import { useRouter } from "next/navigation";
 import { toCanvas } from "qrcode";
 import { useEffect, useRef } from "react";
-import { useDialog } from "../../dialog/provider";
+import { useDialog } from "../dialog/provider";
 import { Badge } from "@/components/ui/badge";
 
 const {
