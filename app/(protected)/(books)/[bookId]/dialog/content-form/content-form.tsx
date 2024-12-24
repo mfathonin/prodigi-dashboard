@@ -308,8 +308,9 @@ const AliasEditor = ({
 };
 
 const selectedOptionStyle =
-  "bg-green-500 hover:bg-green-500 text-white hover:text-white flex-1";
-const defaultOptionStyle = "hover:bg-zinc-100 flex-1";
+  "rounded-md !bg-green-500 !border-slate-200 hover:bg-green-500 dark:!border-slate-700 text-white hover:text-white dark:hover:text-white flex-1";
+const defaultOptionStyle =
+  "rounded-md !border-slate-200 hover:bg-zinc-100 flex-1 text-slate-900 hover:text-slate-900 dark:!border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/70 dark:hover:text-slate-50";
 
 const OptionViewer = ({ nOptions }: { nOptions: number }) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);

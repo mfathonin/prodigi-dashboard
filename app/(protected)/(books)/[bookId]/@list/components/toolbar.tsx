@@ -80,18 +80,18 @@ export const Toolbar = () => {
         <Button
           variant="outline"
           size="icon"
-          className="rounded-full flex-shrink-0 gap-1 size-9 lg:size-fit border text-sky-500 hover:text-sky-600 border-sky-500 hover:border-sky-600 dark:border-sky-800 hover:bg-sky-300/20 dark:hover:bg-sky-700/20"
+          className="flex-shrink-0 gap-1 size-9"
           onClick={onFilterClick}
         >
           <i className="bx bx-filter-alt text-sm md:text-lg text-primary-500-400-token" />
         </Button>
         {isFilterSortActive && (
-          <div className="size-3 bg-violet-400 rounded-full absolute top-0 right-0" />
+          <div className="size-3 bg-indigo-500/90 dark:bg-indigo-400 rounded-full absolute top-0 right-0" />
         )}
       </div>
       <Button
         size="icon"
-        className="rounded-full flex-shrink-0 gap-1 size-9 lg:size-fit bg-sky-500 dark:bg-sky-900 hover:bg-sky-600 dark:hover:bg-sky-700 text-white dark:text-white hover:text-white"
+        className="flex-shrink-0 gap-1 size-9"
         onClick={() => {
           dialog &&
             dialog.openDialog("form", EMPTY_BOOK_TEMPLATE, async (result) => {

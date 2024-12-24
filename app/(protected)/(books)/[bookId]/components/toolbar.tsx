@@ -51,7 +51,7 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
     <div className="flex gap-2">
       <SearchBox searchKey={CONTENT_QUERY} placeholder="Cari konten" />
       <Button
-        className="rounded-full flex gap-1  size-9 lg:size-fit border text-sky-500 hover:text-sky-600 border-sky-500 hover:border-sky-600 dark:border-sky-800 hover:bg-sky-300/20 dark:hover:bg-sky-700/20"
+        className="flex gap-1  size-9 lg:size-fit"
         variant="outline"
         disabled={book.contents === 0}
         onClick={handleDownloadAllQR}
@@ -60,7 +60,7 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
         <span className="hidden lg:block text-sm">Unduh Semua QR</span>
       </Button>
       <Button
-        className="rounded-full flex gap-1 size-9 lg:size-fit bg-sky-500 dark:bg-sky-900 hover:bg-sky-600 dark:hover:bg-sky-700 text-white dark:text-white hover:text-white"
+        className="flex gap-1 size-9 lg:size-fit"
         variant="default"
         onClick={handleAddContent}
       >
