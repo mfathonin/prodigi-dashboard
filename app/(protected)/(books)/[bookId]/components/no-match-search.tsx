@@ -1,10 +1,10 @@
 import Image from "next/image";
 
-export const NoMatchSearch = ({
-  searchParams,
-}: {
+type NoMatchSearchProps = {
   searchParams: Record<string, string | string[] | undefined>;
-}) => {
+};
+
+export const NoMatchSearch = ({ searchParams }: NoMatchSearchProps) => {
   const content = searchParams["content"];
   const searchQuery = typeof content === "string" ? content.trim() : "";
 

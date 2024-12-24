@@ -17,7 +17,13 @@ export const MiniBookSelector = async ({
   const bookId = params.bookId;
   const supabase = createClient();
   const bookRepo = new BookRepository(supabase);
-  const books = await bookRepo.getBooks();
+
+  const bookQueryOptions = {
+    sortBy: "title",
+    orderBy: "asc",
+  };
+
+  const books = await bookRepo.getBooks(bookQueryOptions);
 
   const selectedBookTitle = books.find((book) => book.uuid === bookId)?.title;
 

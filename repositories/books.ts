@@ -28,7 +28,7 @@ export class BookRepository implements Book {
     this.attributesRepo = new AttributesRepository(_db);
   }
 
-  async getBooks(queryOptions?: QueryOptions) {
+  async getBooks(queryOptions?: Partial<QueryOptions>) {
     const { filter } = queryOptions ?? {};
     let filteredBookIds: string[] = [];
     const isNoAttribute = filter?.includes("none");
