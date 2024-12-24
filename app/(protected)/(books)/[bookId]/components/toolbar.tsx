@@ -1,12 +1,14 @@
 "use client";
 
+import { useParams, useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 import { downloadQRCodes } from "@/lib/utils";
 import { BooksContentsCount, ContentUpdateForm } from "@/models";
-import { useParams, useRouter } from "next/navigation";
-import { useDialog } from "../../dialog/provider";
+
+import { useDialog } from "../dialog/provider";
 import { handleContentForm } from "./handler";
 
 const {
@@ -49,8 +51,8 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
     <div className="flex gap-2">
       <SearchBox searchKey={CONTENT_QUERY} placeholder="Cari konten" />
       <Button
-        className="rounded-full flex gap-1 size-9 lg:size-fit"
-        variant="secondary"
+        className="flex gap-1  size-9 lg:size-fit"
+        variant="outline"
         disabled={book.contents === 0}
         onClick={handleDownloadAllQR}
       >
@@ -58,7 +60,7 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
         <span className="hidden lg:block text-sm">Unduh Semua QR</span>
       </Button>
       <Button
-        className="rounded-full flex gap-1 size-9 lg:size-fit"
+        className="flex gap-1 size-9 lg:size-fit"
         variant="default"
         onClick={handleAddContent}
       >

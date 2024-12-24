@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { constants } from "@/lib/constants";
 import { ContentUpdateForm } from "@/models";
-import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { useDialog } from "../../dialog/provider";
+
+import { useDialog } from "../dialog/provider";
 import { handleContentForm } from "./handler";
 
 const { EMPTY_CONTENT_TEMPLATE } = constants;

@@ -1,6 +1,11 @@
+import { constants } from "@/lib/constants";
 import { BooksAttributes, Database, QueryOptions, Tables } from "@/models";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { AttributesRepository } from "./attributes";
+
+const {
+  validation: { uuid },
+} = constants;
 
 type Books = Tables<"books">;
 type BooksContentsCount = Books & { contents: number };
@@ -9,7 +14,7 @@ type BookWithAttributes = Books & { attributes?: BooksAttributes[] };
 interface Book {
   db: any;
   getBooks(queryOptions?: QueryOptions): Promise<BooksContentsCount[]>;
-  getBook(id: string): Promise<BooksContentsCount>;
+  getBook(id: string): Promise<BooksContentsCount | undefined>;
   upsertBook(book: BookWithAttributes): Promise<BookWithAttributes>;
   deleteBook(id: string): Promise<void>;
 }
@@ -39,9 +44,7 @@ export class BookRepository implements Book {
         .filter((d: any) => d.attributes.length === 0)
         .map((d: any) => d.uuid);
     } else if (filter && filter.length > 0 && !isNoAttribute) {
-      const regex =
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-      const filtered = filter.filter((id: string) => regex.test(id));
+      const filtered = filter.filter((id: string) => uuid.pattern.test(id));
 
       const { data, error } = await this.db
         .from("books_attributes")
@@ -92,13 +95,19 @@ export class BookRepository implements Book {
   }
 
   async getBook(id: string) {
+    const isValidUUID = uuid.pattern.test(id);
+    if (!isValidUUID) return undefined;
+
     const response = await this.db
       .from("books")
       .select("*, contents (id)")
       .eq("uuid", id)
       .single();
 
-    if (response.error) throw response.error;
+    if (response.error?.code === "PGRST116") return undefined;
+    if (response.error) {
+      throw response.error;
+    }
 
     const book = {
       ...response.data,

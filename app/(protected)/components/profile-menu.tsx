@@ -39,8 +39,8 @@ export const ProfileMenu = ({ user }: ProfileMenuProps) => {
         <div className="flex gap-4 items-center py-1 px-1 md:pl-5 rounded-full cursor-pointer group hover:bg-surface-100-800-token hover:bg-slate-100 dark:hover:bg-slate-800">
           <p className="hidden md:flex">{user.email}</p>
           <Avatar>
-            <AvatarFallback className="bg-indigo-800 dark:bg-indigo-300 text-white">
-              <i className="bx bxs-face text-3xl text-slate-200 dark:text-slate-700" />
+            <AvatarFallback className="bg-sky-500 dark:bg-sky-900 text-white">
+              <i className="bx bxs-face text-2xl text-white dark:text-white" />
             </AvatarFallback>
           </Avatar>
         </div>

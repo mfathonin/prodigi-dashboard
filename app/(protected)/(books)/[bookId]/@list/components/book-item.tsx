@@ -1,24 +1,26 @@
+import Link from "next/link";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { BooksContentsCount } from "@/models";
-import Link from "next/link";
-import { BookOptions } from "./book-options";
-import { ReadonlyURLSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { BooksContentsCount } from "@/models";
+
+import { BookOptions } from "./book-options";
 
 export type BookItemProps = {
   book: BooksContentsCount;
   selected: boolean;
-  searchParams?: ReadonlyURLSearchParams;
+  searchParams?: Record<string, string>;
 };
 
 export const BookItem = ({ book, selected, searchParams }: BookItemProps) => {
   let url: string = `/${book.uuid}`;
   if (searchParams) {
-    url += `?${searchParams.toString()}`;
+    const urlSearchParams = new URLSearchParams(searchParams);
+    url += `?${urlSearchParams.toString()}`;
   }
 
   return (

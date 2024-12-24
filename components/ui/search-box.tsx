@@ -37,7 +37,7 @@ export const SearchBox = ({
     if (value === "") {
       params.delete(key);
     } else {
-      params.set(key, value);
+      params.set(key, value.trim());
     }
     return `${location.pathname}?${params.toString()}`;
   };

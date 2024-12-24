@@ -1,14 +1,17 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 import { Books, BookUpdateForm, FilterSort } from "@/models";
 import { AttributesRepository } from "@/repositories/attributes";
 import { BookRepository } from "@/repositories/books";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
-import { useDialog } from "../dialog/provider";
+
+import { useDialog } from "../../dialog/provider";
 
 const {
   searchParams: { BOOK_QUERY, FILTER, SORT_BY, ORDER_BY },
@@ -77,18 +80,18 @@ export const Toolbar = () => {
         <Button
           variant="outline"
           size="icon"
-          className="rounded-full flex-shrink-0"
+          className="flex-shrink-0 gap-1 size-9"
           onClick={onFilterClick}
         >
           <i className="bx bx-filter-alt text-sm md:text-lg text-primary-500-400-token" />
         </Button>
         {isFilterSortActive && (
-          <div className="size-3 bg-violet-400 rounded-full absolute top-0 right-0" />
+          <div className="size-3 bg-indigo-500/90 dark:bg-indigo-400 rounded-full absolute top-0 right-0" />
         )}
       </div>
       <Button
         size="icon"
-        className="rounded-full flex-shrink-0"
+        className="flex-shrink-0 gap-1 size-9"
         onClick={() => {
           dialog &&
             dialog.openDialog("form", EMPTY_BOOK_TEMPLATE, async (result) => {
@@ -115,6 +118,10 @@ export const Toolbar = () => {
                   );
 
                 router.refresh();
+
+                toast("Berhasil Menambahkan Buku 🎉", {
+                  description: `Buku "${bookData.title}" berhasil ditambahkan!`,
+                });
               }
             });
         }}

@@ -39,4 +39,15 @@ export const constants = {
     uuid: "",
     type: "content",
   } satisfies ContentUpdateForm,
+  validation: {
+    uuid: {
+      pattern:
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+      message: "UUID tidak valid",
+    },
+    url: {
+      pattern: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+      message: "URL tidak valid",
+    },
+  },
 };

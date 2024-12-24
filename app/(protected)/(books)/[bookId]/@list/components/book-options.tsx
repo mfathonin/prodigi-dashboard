@@ -15,7 +15,7 @@ import { BookRepository } from "@/repositories/books";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
-import { useDialog } from "../dialog/provider";
+import { useDialog } from "../../dialog/provider";
 
 export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
   const supabase = createClient();
@@ -105,13 +105,24 @@ export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
             if (dialog) {
               dialog.openDialog("alert", book, async (result) => {
                 if (typeof result === "boolean" && result) {
-                  await bookRepo.deleteBook(book.uuid);
+                  try {
+                    await bookRepo.deleteBook(book.uuid);
 
-                  router.refresh();
-
-                  if (path.includes(book.uuid)) {
-                    router.replace("/");
                     router.refresh();
+
+                    if (path.includes(book.uuid)) {
+                      router.replace("/books");
+                      router.refresh();
+                    }
+
+                    toast("Berhasil Menghapus 🎉", {
+                      description: `Buku "${book.title}" berhasil dihapus!`,
+                    });
+                  } catch (error) {
+                    console.error(error);
+                    toast("Gagal Menghapus Buku🚨", {
+                      description: `Gagal menghapus buku "${book.title}"!`,
+                    });
                   }
                 }
               });
