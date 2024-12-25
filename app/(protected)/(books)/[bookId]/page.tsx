@@ -37,9 +37,9 @@ export default async function BookContentPage({
 
   if (!book) return notFound();
 
-  const serachQuery = searchParams["content"] as string;
+  const searchQuery = searchParams["content"] as string;
   const filteredContents = contents.filter((c) =>
-    c.title?.toLowerCase()?.includes((serachQuery ?? "").toLowerCase())
+    c.title?.toLowerCase().includes((searchQuery ?? "").toLowerCase())
   );
   return (
     <DialogProvider>
