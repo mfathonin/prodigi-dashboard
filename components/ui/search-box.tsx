@@ -61,7 +61,7 @@ export const SearchBox = ({
       onChange={handleSearch}
       value={searchQuery}
       placeholder={placeholder}
-      className="rounded-full mx-[2px] bg-background"
+      className="rounded-full mx-[2px] bg-background focus:!ring-sky-300 dark:focus:!ring-sky-800"
     />
   );
 };

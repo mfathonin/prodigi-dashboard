@@ -40,7 +40,7 @@ export const ProfileMenu = ({ user }: ProfileMenuProps) => {
           <p className="hidden md:flex">{user.email}</p>
           <Avatar>
             <AvatarFallback className="bg-sky-500 dark:bg-sky-900 text-white">
-              <i className="bx bxs-face text-2xl text-white dark:text-white" />
+              <i className="bx bxs-face text-2xl text-white" />
             </AvatarFallback>
           </Avatar>
         </div>
@@ -49,7 +49,7 @@ export const ProfileMenu = ({ user }: ProfileMenuProps) => {
         <DropdownMenuLabel>Menu</DropdownMenuLabel>
         <DropdownMenuGroup>
           <MenuItems
-            onClick={() => handleNavigate("/")}
+            onClick={() => handleNavigate("/books")}
             label="Konten buku"
             icon="bx bxs-book-content"
           />
