@@ -68,14 +68,9 @@ export class AnswerSheetRepository implements AnswerSheets {
   ) => {
     const { counts, nOptions, points } = data;
 
-    const { data: existingData, error: existingError } = await this.db
-      .from("answer_sheets")
-      .select("*")
-      .eq("uuid", answerSheetId)
-      .single();
+    const existingData = await this.getAnswerSheetById(answerSheetId);
+    if (!existingData) throw { message: "Data tidak ditemukan" };
 
-    if (existingError || !existingData)
-      throw { message: "Data tidak ditemukan" };
     const {
       counts: oldCounts,
       n_options: oldNOptions,

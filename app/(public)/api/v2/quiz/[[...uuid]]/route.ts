@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supaclient/admin";
 import { AnswerSheetRepository } from "@/repositories/answer-sheets";
 
 const {
+  validation: { uuid: uuidValidation },
   errors: {
     quiz: {
       QUIZ_ANSWERS_LENGTH,
@@ -13,7 +14,7 @@ const {
       QUIZ_MISSING_FIELDS,
       QUIZ_NOT_FOUND,
     },
-    general: { UNKNOWN },
+    general: { UNKNOWN, INVALID_JSON, INVALID_UUID },
   },
 } = constants;
 
@@ -34,7 +35,16 @@ export async function POST(
 
   try {
     const uuid = params.uuid[0];
-    const rawBody = await request.json();
+    if (!uuidValidation.pattern.test(uuid)) {
+      return ApiResponseHandler.error(INVALID_UUID);
+    }
+
+    let rawBody;
+    try {
+      rawBody = await request.json();
+    } catch (error) {
+      return ApiResponseHandler.error(INVALID_JSON);
+    }
 
     // Validate required fields
     const { data: body, success } = inputSchema.safeParse(rawBody);

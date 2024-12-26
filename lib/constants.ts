@@ -68,6 +68,16 @@ export const constants = {
       },
     } as Record<string, ErrorCodes>,
     general: {
+      INVALID_JSON: {
+        message: "Invalid Data format",
+        code: "INVALID_JSON",
+        status: 400,
+      },
+      INVALID_UUID: {
+        message: "Invalid ID format",
+        code: "INVALID_UUID",
+        status: 400,
+      },
       UNKNOWN: {
         message: "Terjadi kesalahan dari server",
         code: "UNKNOWN",
