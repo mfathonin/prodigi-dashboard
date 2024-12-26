@@ -22,8 +22,4 @@ export namespace ApiResponseHandler {
       { status: error.status }
     );
   }
-
-  export function redirect(url: URL | string) {
-    return NextResponse.redirect(url);
-  }
 }
