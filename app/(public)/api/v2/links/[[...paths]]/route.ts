@@ -53,25 +53,21 @@ export async function GET(
   }
 
   const formattedLink = {
-    contents: [
-      {
-        id: contentData.id,
-        title: contentData.title,
-        collectionId: contentData.book_id,
-        createdAt: contentData.created_at,
-        link: {
-          targetUrl: linkData.target_url,
-          url: linkData.path,
-        },
-        updatedAt: contentData.updated_at,
-        collection: {
-          id: contentData.book_id,
-          createdAt: contentData.created_at,
-          name: contentData.title,
-          updatedAt: contentData.updated_at,
-        },
-      },
-    ],
+    id: contentData.id,
+    title: contentData.title,
+    collectionId: contentData.book_id,
+    createdAt: contentData.created_at,
+    link: {
+      targetUrl: linkData.target_url,
+      url: linkData.path,
+    },
+    updatedAt: contentData.updated_at,
+    collection: {
+      id: contentData.book_id,
+      createdAt: contentData.created_at,
+      name: contentData.title,
+      updatedAt: contentData.updated_at,
+    },
   };
 
   return ApiResponseHandler.success(formattedLink);

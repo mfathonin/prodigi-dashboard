@@ -79,7 +79,11 @@ export default async function QuizPage({ params }: { params: { id: string } }) {
             />
           ))}
         </div>
-        <AnswerConfigForm answerSheetId={answerSheet.uuid} data={answerSheet} />
+        <AnswerConfigForm
+          key={answerSheet.updated_at}
+          answerSheetId={answerSheet.uuid}
+          data={answerSheet}
+        />
       </div>
     </div>
   );

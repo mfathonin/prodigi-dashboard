@@ -340,7 +340,7 @@ export const AnswerConfigForm = ({
             data={getData(index)}
             index={index}
             onEdit={(_) => setEdited(true)}
-          ></OptionsEditor>
+          />
         ))}
       </div>
       {edited && <SaveButton />}

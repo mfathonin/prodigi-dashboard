@@ -48,14 +48,18 @@ export class AnswerSheetRepository implements AnswerSheets {
     oldValue: number[],
     newCount: number,
     oldCount: number
-  ): number[] | undefined => {
-    if (newValue && oldCount >= newCount) {
-      return Array(newCount).fill(newValue);
+  ): number[] => {
+    const baseValue = newValue ?? oldValue[0];
+    const newArray = Array(newCount).fill(baseValue);
+
+    // Copy existing values up to the new count
+    if (!newValue) {
+      for (let i = 0; i < Math.min(newCount, oldCount); i++) {
+        newArray[i] = oldValue[i];
+      }
     }
-    if (newCount > oldCount) {
-      return Array(newCount).fill(newValue ?? oldValue[0]);
-    }
-    return undefined;
+
+    return newArray;
   };
 
   getAnswerSheetById = async (
@@ -95,10 +99,18 @@ export class AnswerSheetRepository implements AnswerSheets {
       counts: oldCounts,
       n_options: oldNOptions,
       points: oldPoints,
+      answers: oldAnswers,
     } = existingData;
 
     const newNOptions = this.createConfigArray(nOptions, oldNOptions, counts, oldCounts);
     const newPoints = this.createConfigArray(points, oldPoints, counts, oldCounts);
+    let newAnswers = this.createConfigArray(undefined, oldAnswers, counts, oldCounts);
+
+    // validate each answer is in range
+    newAnswers = newAnswers.map((answer, index) => {
+      if (answer < 0 || answer >= newNOptions[index]) return 0;
+      return answer;
+    });
 
     // update answer_sheets
     const { error: updateError } = await this.db
@@ -107,6 +119,7 @@ export class AnswerSheetRepository implements AnswerSheets {
         counts,
         n_options: newNOptions,
         points: newPoints,
+        answers: newAnswers,
       })
       .eq("uuid", answerSheetId);
 
@@ -135,9 +148,14 @@ export class AnswerSheetRepository implements AnswerSheets {
       Math.min(MAX_OPTIONS, newNOptions[index])
     );
 
+    // validate answer is in range, reset to 0 if out of range
+    const updatedAnswers = [...existingData.answers];
+    if (existingData.answers[index] >= newNOptions[index])
+      updatedAnswers[index] = 0;
+
     const { error: updateError } = await this.db
       .from("answer_sheets")
-      .update({ n_options: newNOptions })
+      .update({ n_options: newNOptions, answers: updatedAnswers })
       .eq("uuid", answerSheetId);
 
     if (updateError)
@@ -178,7 +196,7 @@ export class AnswerSheetRepository implements AnswerSheets {
 
     if (
       !answers.every(
-        (answer) => answer >= 0 && answer < existingData.n_options[0]
+        (answer, index) => answer >= 0 && answer < existingData.n_options[index]
       )
     )
       throw { message: "Invalid answer values" };
