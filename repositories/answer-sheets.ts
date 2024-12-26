@@ -8,6 +8,24 @@ export class AnswerSheetRepository {
     this.db = supabase;
   }
 
+  getAnswerSheetById = async (answerSheetId: string) => {
+    const { data, error } = await this.db
+      .from("answer_sheets")
+      .select("*")
+      .eq("uuid", answerSheetId)
+      .single();
+
+    if (error) {
+      console.error(error);
+
+      if (error.code === "PGRST116") return null;
+
+      throw { message: "Something went wrong", error };
+    }
+
+    return data;
+  };
+
   resetAnswerSheetConfig = async (
     answerSheetId: string,
     data: {
