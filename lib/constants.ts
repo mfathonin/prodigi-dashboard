@@ -85,6 +85,10 @@ export const constants = {
       },
     } as Record<string, ErrorCodes>,
   },
+  quizConfig: {
+    MIN_OPTIONS: 2,
+    MAX_OPTIONS: 5,
+  },
   searchParams: {
     BOOK_QUERY: "book",
     CONTENT_QUERY: "content",

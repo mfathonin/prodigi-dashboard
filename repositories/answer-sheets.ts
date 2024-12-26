@@ -1,5 +1,8 @@
 import { Database, Tables } from "@/models/supaservice.types";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { constants } from "@/lib/constants";
+
+const { MIN_OPTIONS, MAX_OPTIONS } = constants.quizConfig;
 
 type AnswerSheet = Tables<"answer_sheets">;
 
@@ -40,7 +43,24 @@ export class AnswerSheetRepository implements AnswerSheets {
     this.db = supabase;
   }
 
-  getAnswerSheetById = async (answerSheetId: string) => {
+  private createConfigArray = (
+    newValue: number | undefined,
+    oldValue: number[],
+    newCount: number,
+    oldCount: number
+  ): number[] | undefined => {
+    if (newValue && oldCount >= newCount) {
+      return Array(newCount).fill(newValue);
+    }
+    if (newCount > oldCount) {
+      return Array(newCount).fill(newValue ?? oldValue[0]);
+    }
+    return undefined;
+  };
+
+  getAnswerSheetById = async (
+    answerSheetId: string
+  ): Promise<AnswerSheet | null> => {
     const { data, error } = await this.db
       .from("answer_sheets")
       .select("*")
@@ -48,14 +68,14 @@ export class AnswerSheetRepository implements AnswerSheets {
       .single();
 
     if (error) {
-      console.error(error);
+      console.error(`Error fetching answer sheet ${answerSheetId}:`, error);
 
       if (error.code === "PGRST116") return null;
 
-      throw { message: "Something went wrong", error };
+      throw { message: "Failed to fetch answer sheet", error };
     }
 
-    return data;
+    return data as AnswerSheet;
   };
 
   resetAnswerSheetConfig = async (
@@ -77,26 +97,16 @@ export class AnswerSheetRepository implements AnswerSheets {
       points: oldPoints,
     } = existingData;
 
-    const new_n_options =
-      nOptions && oldCounts >= counts
-        ? Array(counts).fill(nOptions)
-        : counts > oldCounts
-        ? Array(counts).fill(nOptions ?? oldNOptions[0])
-        : undefined;
-    const new_points =
-      points && oldCounts >= counts
-        ? Array(counts).fill(points)
-        : counts > oldCounts
-        ? Array(counts).fill(points ?? oldPoints[0])
-        : undefined;
+    const newNOptions = this.createConfigArray(nOptions, oldNOptions, counts, oldCounts);
+    const newPoints = this.createConfigArray(points, oldPoints, counts, oldCounts);
 
     // update answer_sheets
     const { error: updateError } = await this.db
       .from("answer_sheets")
       .update({
         counts,
-        n_options: new_n_options,
-        points: new_points,
+        n_options: newNOptions,
+        points: newPoints,
       })
       .eq("uuid", answerSheetId);
 
@@ -109,20 +119,21 @@ export class AnswerSheetRepository implements AnswerSheets {
     index: number,
     type: "increase" | "decrease"
   ) => {
-    const { data: existingData, error: existingError } = await this.db
-      .from("answer_sheets")
-      .select("*")
-      .eq("uuid", answerSheetId)
-      .single();
+    if (index < 0) throw { message: "Invalid index" };
 
-    if (existingError || !existingData)
-      throw { message: "Data tidak ditemukan" };
+    const existingData = await this.getAnswerSheetById(answerSheetId);
+    if (!existingData) throw { message: "Data tidak ditemukan" };
 
     const newNOptions = [...existingData.n_options];
+    if (index >= newNOptions.length) throw { message: "Index out of bounds" };
+
     newNOptions[index] =
       type === "increase" ? newNOptions[index] + 1 : newNOptions[index] - 1;
 
-    newNOptions[index] = Math.max(2, Math.min(5, newNOptions[index]));
+    newNOptions[index] = Math.max(
+      MIN_OPTIONS,
+      Math.min(MAX_OPTIONS, newNOptions[index])
+    );
 
     const { error: updateError } = await this.db
       .from("answer_sheets")
@@ -138,16 +149,14 @@ export class AnswerSheetRepository implements AnswerSheets {
     index: number,
     type: "increase" | "decrease"
   ) => {
-    const { data: existingData, error: existingError } = await this.db
-      .from("answer_sheets")
-      .select("*")
-      .eq("uuid", answerSheetId)
-      .single();
+    if (index < 0) throw { message: "Invalid index" };
 
-    if (existingError || !existingData)
-      throw { message: "Data tidak ditemukan" };
+    const existingData = await this.getAnswerSheetById(answerSheetId);
+    if (!existingData) throw { message: "Data tidak ditemukan" };
 
     const newPoints = [...existingData.points];
+    if (index >= newPoints.length) throw { message: "Index out of bounds" };
+
     newPoints[index] =
       type === "increase" ? newPoints[index] + 1 : newPoints[index] - 1;
 
@@ -156,10 +165,24 @@ export class AnswerSheetRepository implements AnswerSheets {
       .update({ points: newPoints })
       .eq("uuid", answerSheetId);
 
-    if (updateError) throw { message: "Gagal mengupdate data" };
+    if (updateError)
+      throw { message: "Gagal mengupdate data", error: updateError };
   };
 
   updateAnswers = async (answerSheetId: string, answers: number[]) => {
+    const existingData = await this.getAnswerSheetById(answerSheetId);
+    if (!existingData) throw { message: "AnswerSheet not found" };
+
+    if (answers.length !== existingData.counts)
+      throw { message: "Invalid answers array length" };
+
+    if (
+      !answers.every(
+        (answer) => answer >= 0 && answer < existingData.n_options[0]
+      )
+    )
+      throw { message: "Invalid answer values" };
+
     const { error } = await this.db
       .from("answer_sheets")
       .update({ answers })
@@ -175,6 +198,11 @@ export class AnswerSheetRepository implements AnswerSheets {
     nOption: number,
     points: number
   ) => {
+    if (counts <= 0) throw { message: "Invalid counts value" };
+
+    if (nOption < MIN_OPTIONS || nOption > MAX_OPTIONS)
+      throw { message: "Invalid nOption value" };
+
     const { error } = await this.db.from("answer_sheets").upsert({
       uuid: answerSheetId,
       book_id: bookId,
