@@ -1,7 +1,39 @@
-import { Database } from "@/models/supaservice.types";
+import { Database, Tables } from "@/models/supaservice.types";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-export class AnswerSheetRepository {
+type AnswerSheet = Tables<"answer_sheets">;
+
+interface AnswerSheets {
+  getAnswerSheetById: (answerSheetId: string) => Promise<AnswerSheet | null>;
+  resetAnswerSheetConfig: (
+    answerSheetId: string,
+    data: {
+      counts: number;
+      nOptions?: number;
+      points?: number;
+    }
+  ) => Promise<void>;
+  updateNOption: (
+    answerSheetId: string,
+    index: number,
+    type: "increase" | "decrease"
+  ) => Promise<void>;
+  updatePoints: (
+    answerSheetId: string,
+    index: number,
+    type: "increase" | "decrease"
+  ) => Promise<void>;
+  updateAnswers: (answerSheetId: string, answers: number[]) => Promise<void>;
+  recreateAnswerSheet: (
+    answerSheetId: string,
+    bookId: string,
+    counts: number,
+    nOption: number,
+    points: number
+  ) => Promise<void>;
+}
+
+export class AnswerSheetRepository implements AnswerSheets {
   private db: SupabaseClient<Database>;
 
   constructor(supabase: SupabaseClient<Database>) {

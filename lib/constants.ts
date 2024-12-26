@@ -1,4 +1,9 @@
 import { BookUpdateForm, ContentUpdateForm } from "@/models";
+export type ErrorCodes = {
+  message: string;
+  code: string;
+  status: number;
+};
 
 export const constants = {
   CONTENT: {
@@ -16,6 +21,59 @@ export const constants = {
       USER_EXISTS: "User sudah terdaftar",
       UNKNOWN: "Terjadi kesalahan dari server",
     },
+    content: {
+      CONTENT_NOT_FOUND: {
+        message: "Content tidak ditemukan",
+        code: "CONTENT_NOT_FOUND",
+        status: 404,
+      },
+    } as Record<string, ErrorCodes>,
+    link: {
+      LINK_NOT_FOUND: {
+        message: "Link tidak ditemukan",
+        code: "LINK_NOT_FOUND",
+        status: 404,
+      },
+      LINK_MISSING_SIGNATURE: {
+        message: "App signature is required",
+        code: "LINK_MISSING_SIGNATURE",
+        status: 400,
+      },
+      LINK_PATH_REQUIRED: {
+        message: "Link path is required",
+        code: "LINK_PATH_REQUIRED",
+        status: 400,
+      },
+    } as Record<string, ErrorCodes>,
+    quiz: {
+      QUIZ_MISSING_FIELDS: {
+        message: "Missing required fields",
+        code: "QUIZ_MISSING_FIELDS",
+        status: 400,
+      },
+      QUIZ_ANSWERS_NOT_ARRAY: {
+        message: "Answers must be an array of numbers",
+        code: "QUIZ_ANSWERS_NOT_ARRAY",
+        status: 400,
+      },
+      QUIZ_NOT_FOUND: {
+        message: "Answer sheet not found",
+        code: "QUIZ_NOT_FOUND",
+        status: 404,
+      },
+      QUIZ_ANSWERS_LENGTH: {
+        message: "Number of submitted answers must match the quiz length",
+        code: "QUIZ_ANSWERS_LENGTH",
+        status: 400,
+      },
+    } as Record<string, ErrorCodes>,
+    general: {
+      UNKNOWN: {
+        message: "Terjadi kesalahan dari server",
+        code: "UNKNOWN",
+        status: 500,
+      },
+    } as Record<string, ErrorCodes>,
   },
   searchParams: {
     BOOK_QUERY: "book",

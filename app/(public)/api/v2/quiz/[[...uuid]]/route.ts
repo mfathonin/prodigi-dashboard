@@ -1,7 +1,29 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
 
+import { ApiResponseHandler } from "@/lib/api-response";
+import { constants } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supaclient/admin";
 import { AnswerSheetRepository } from "@/repositories/answer-sheets";
+
+const {
+  errors: {
+    quiz: {
+      QUIZ_ANSWERS_LENGTH,
+      QUIZ_ANSWERS_NOT_ARRAY,
+      QUIZ_MISSING_FIELDS,
+      QUIZ_NOT_FOUND,
+    },
+    general: { UNKNOWN },
+  },
+} = constants;
+
+const inputSchema = z.object({
+  answers: z.array(z.number()).min(1),
+  name: z.string().min(1),
+  className: z.string().min(1),
+  numberId: z.string().min(1),
+  schoolName: z.string().min(1),
+});
 
 export async function POST(
   request: Request,
@@ -12,44 +34,35 @@ export async function POST(
 
   try {
     const uuid = params.uuid[0];
-    const body = await request.json();
-    const { answers, name, loc } = body;
+    const rawBody = await request.json();
 
     // Validate required fields
-    if (!uuid || !Array.isArray(answers) || !name || !loc) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    const { data: body, success } = inputSchema.safeParse(rawBody);
+    if (!success) {
+      return ApiResponseHandler.error(QUIZ_MISSING_FIELDS);
     }
 
+    const { answers, ...profile } = body;
+
     if (!answers.every((answer) => typeof answer === "number")) {
-      return NextResponse.json(
-        { error: "Answers must be an array of numbers" },
-        { status: 400 }
-      );
+      return ApiResponseHandler.error(QUIZ_ANSWERS_NOT_ARRAY);
     }
 
     // Find the answer sheet by UUID
     const answerSheet = await answerSheetRepo.getAnswerSheetById(uuid);
 
     if (!answerSheet) {
-      return NextResponse.json({
-        error: "Answer sheet not found",
-        status: 404,
-      });
+      return ApiResponseHandler.error(QUIZ_NOT_FOUND);
     }
 
     // Validate answers length
     if (answers.length !== answerSheet.counts) {
-      return NextResponse.json(
-        { error: "Number of submitted answers must match the quiz length" },
-        { status: 400 }
-      );
+      return ApiResponseHandler.error(QUIZ_ANSWERS_LENGTH);
     }
+
     // Calculate score
     const { answers: correctAnswers, counts: totalQuestions } = answerSheet;
-    let score = 0;
+    let points = 0;
     let correctAnswersCount = 0;
 
     answers.forEach((submittedAnswer: number, index: number) => {
@@ -57,7 +70,7 @@ export async function POST(
         index < correctAnswers.length &&
         submittedAnswer === correctAnswers[index]
       ) {
-        score += answerSheet.points[index];
+        points += answerSheet.points[index];
         correctAnswersCount++;
       }
     });
@@ -65,24 +78,15 @@ export async function POST(
     // Calculate percentage
     const percentage = (correctAnswersCount / totalQuestions) * 100;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        points: score,
-        score: percentage,
-        totalQuestions,
-        correctAnswers: correctAnswersCount,
-        profile: {
-          name,
-          loc,
-        },
-      },
+    return ApiResponseHandler.success({
+      profile,
+      points,
+      percentage,
+      totalQuestions,
+      correctAnswers: correctAnswersCount,
     });
   } catch (error) {
     console.error("Error processing quiz submission:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return ApiResponseHandler.error(UNKNOWN);
   }
 }
