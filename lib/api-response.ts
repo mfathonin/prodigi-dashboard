@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ErrorCodes } from "./constants";
 
-export class ApiResponseHandler {
-  static success<T>(data: T, status: number = 200) {
+export namespace ApiResponseHandler {
+  export function success<T>(data: T, status: number = 200) {
     return NextResponse.json(
       {
         success: true,
@@ -12,7 +12,7 @@ export class ApiResponseHandler {
     );
   }
 
-  static error(error: ErrorCodes) {
+  export function error(error: ErrorCodes) {
     return NextResponse.json(
       {
         success: false,
@@ -23,7 +23,7 @@ export class ApiResponseHandler {
     );
   }
 
-  static redirect(url: URL | string) {
+  export function redirect(url: URL | string) {
     return NextResponse.redirect(url);
   }
 }

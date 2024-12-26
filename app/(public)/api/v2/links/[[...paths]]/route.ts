@@ -29,13 +29,16 @@ export async function GET(
     .from("link")
     .select("*")
     .eq("path", linkPath)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (linkError) {
     if (linkError.code === "PGRST116")
       return ApiResponseHandler.error(LINK_NOT_FOUND);
     return ApiResponseHandler.error(UNKNOWN);
   }
+
+  if (!linkData) return ApiResponseHandler.error(LINK_NOT_FOUND);
 
   const { data: contentData, error: contentError } = await supabase
     .from("contents")

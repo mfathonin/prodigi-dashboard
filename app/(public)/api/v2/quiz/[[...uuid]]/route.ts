@@ -61,29 +61,28 @@ export async function POST(
     }
 
     // Calculate score
-    const { answers: correctAnswers, counts: totalQuestions } = answerSheet;
-    let points = 0;
-    let correctAnswersCount = 0;
+    const { answers: answerKey, counts: totalQuestions } = answerSheet;
 
-    answers.forEach((submittedAnswer: number, index: number) => {
-      if (
-        index < correctAnswers.length &&
-        submittedAnswer === correctAnswers[index]
-      ) {
-        points += answerSheet.points[index];
-        correctAnswersCount++;
-      }
-    });
+    const { totalPoints, correctAnswers } = answers.reduce(
+      (acc, submittedAnswer, index) => {
+        if (index < answerKey.length && submittedAnswer === answerKey[index]) {
+          acc.totalPoints += answerSheet.points[index];
+          acc.correctAnswers++;
+        }
+        return acc;
+      },
+      { totalPoints: 0, correctAnswers: 0 }
+    );
 
     // Calculate percentage
-    const percentage = (correctAnswersCount / totalQuestions) * 100;
+    const percentage = (correctAnswers / totalQuestions) * 100;
 
     return ApiResponseHandler.success({
       profile,
-      points,
+      totalPoints,
       percentage,
       totalQuestions,
-      correctAnswers: correctAnswersCount,
+      correctAnswers,
     });
   } catch (error) {
     console.error("Error processing quiz submission:", error);
