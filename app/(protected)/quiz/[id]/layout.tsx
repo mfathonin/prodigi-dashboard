@@ -46,7 +46,7 @@ export default async function QuizLayout({
     ]);
     book = result[0];
     answerSheet = result[1];
-  } catch (error: PostgrestError | Error | unknown) {
+  } catch (error: unknown) {
     console.error("[quiz.[book,answerSheet].fetch]:", error);
     if (error instanceof Error)
       toast.error("Gagal memuat data lembar jawaban", {
