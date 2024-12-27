@@ -1,35 +1,26 @@
+import { notFound } from "next/navigation";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supaclient/server";
+import { AnswerSheetRepository } from "@/repositories/answer-sheets";
+
 import { AnswerConfigForm, GeneralSettingsForm } from "./components/forms";
 import QuestionConfig from "./components/question-config";
-import { getAnswerSheet } from "./handler";
+import { getConfigByIndex } from "./handler";
 
 export default async function QuizPage({ params }: { params: { id: string } }) {
-  const answerSheet = await getAnswerSheet(params.id);
+  const supabase = createClient();
+  const answerSheetRepo = new AnswerSheetRepository(supabase);
+  const answerSheet = await answerSheetRepo.getAnswerSheetById(params.id);
 
   if (!answerSheet) return notFound();
 
   const questions = Array(answerSheet.counts).fill(0);
-  const getData = (index: number) => {
-    if (
-      !Array.isArray(answerSheet.n_options) ||
-      !Array.isArray(answerSheet.points) ||
-      !Array.isArray(answerSheet.answers)
-    ) {
-      throw new Error("Invalid answer sheet data structure");
-    }
-    return {
-      id: answerSheet.uuid,
-      nOptions: answerSheet.n_options[index] ?? 0,
-      points: answerSheet.points[index] ?? 0,
-      answer: answerSheet.answers[index] ?? 0,
-    };
-  };
 
   return (
     <div className="flex flex-col w-full gap-6">
@@ -68,7 +59,11 @@ export default async function QuizPage({ params }: { params: { id: string } }) {
       <div className="flex w-full">
         <div className="hidden md:flex max-w-64 flex-col flex-1 justify-between pb-1 border-transparent">
           {questions.map((_, index) => (
-            <QuestionConfig key={index} data={getData(index)} index={index} />
+            <QuestionConfig
+              key={index}
+              data={getConfigByIndex(index, answerSheet)}
+              index={index}
+            />
           ))}
         </div>
         <div className="hidden md:block lg:flex flex-col flex-1 justify-between pb-1 border-transparent">

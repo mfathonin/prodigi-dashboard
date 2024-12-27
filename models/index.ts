@@ -1,5 +1,7 @@
 import { AttributesRepository } from "@/repositories/attributes";
 
+import { Tables } from "./supaservice.types";
+
 export * from "./books";
 export * from "./contents";
 export * from "./filter-sort";
@@ -13,3 +15,4 @@ export type BooksAttributes = Awaited<
 export type AttritbutesList = Awaited<
   ReturnType<AttributesRepository["getAttributes"]>
 >;
+export type AnswerSheet = Tables<"answer_sheets">;

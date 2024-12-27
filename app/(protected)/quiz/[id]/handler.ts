@@ -1,16 +1,30 @@
-import { createClient } from "@/lib/supaclient/server";
+import { AnswerSheet } from "@/models";
 
-export const getAnswerSheet = async (id: string) => {
-  if (!id) throw new Error("Answer sheet ID is required");
+type QuestionConfig = {
+  id: string;
+  nOptions: number;
+  points: number;
+  answer: number;
+}
 
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("answer_sheets")
-    .select("*")
-    .eq("uuid", id)
-    .single();
+export const getConfigByIndex = (index: number, answerSheet: AnswerSheet): QuestionConfig => {
+  const defaultConfig: QuestionConfig = {
+    id: answerSheet.uuid,
+    nOptions: 0,
+    points: 0,
+    answer: 0,
+  };
 
-  if (error) throw error;
+  const { n_options, points, answers, uuid } = answerSheet;
 
-  return data;
+  if (!Array.isArray(n_options) || !Array.isArray(points) || !Array.isArray(answers)) {
+    return defaultConfig;
+  }
+
+  return {
+    id: uuid,
+    nOptions: n_options[index] ?? 0,
+    points: points[index] ?? 0,
+    answer: answers[index] ?? 0,
+  };
 };

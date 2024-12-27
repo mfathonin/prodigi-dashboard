@@ -1,10 +1,13 @@
-import { createClient } from "@/lib/supaclient/server";
-import { BookRepository } from "@/repositories/books";
-import { ContentsRepository } from "@/repositories/contents";
-import { getAnswerSheet } from "./handler";
-import NotFound from "./not-found";
 import { Metadata } from "next";
 import { toast } from "sonner";
+
+import { createClient } from "@/lib/supaclient/server";
+import { AnswerSheetRepository } from "@/repositories/answer-sheets";
+import { BookRepository } from "@/repositories/books";
+import { ContentsRepository } from "@/repositories/contents";
+
+import NotFound from "./not-found";
+import { PostgrestError } from "@supabase/supabase-js";
 
 export const metadata: Metadata = {
   title: "Prodigi | Worksheet Management",
@@ -25,19 +28,26 @@ export default async function QuizLayout({
       `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${params.id}`
     );
   } catch (error) {
+    console.error("[quiz.contentLink.fetch]:", error);
     return <NotFound />;
   }
 
   if (!contentLink) return <NotFound />;
 
   const bookRepo = new BookRepository(supabase);
-  const book = await bookRepo.getBook(contentLink.book_id);
+  const answerSheetRepo = new AnswerSheetRepository(supabase);
 
+  let book;
   let answerSheet;
   try {
-    answerSheet = await getAnswerSheet(params.id);
-  } catch (error) {
-    console.error("Failed to fetch answer sheet:", error);
+    const result = await Promise.all([
+      bookRepo.getBook(contentLink.book_id),
+      answerSheetRepo.getAnswerSheetById(params.id),
+    ]);
+    book = result[0];
+    answerSheet = result[1];
+  } catch (error: PostgrestError | Error | unknown) {
+    console.error("[quiz.[book,answerSheet].fetch]:", error);
     if (error instanceof Error)
       toast.error("Gagal memuat data lembar jawaban", {
         description: error.message,
