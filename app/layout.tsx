@@ -24,6 +24,13 @@ export default function RootLayout({
     <html suppressHydrationWarning lang="en">
       <head>
         <link
+          rel="preload"
+          href="https://unpkg.com/boxicons@2.1.4/fonts/boxicons.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
           href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
           rel="stylesheet"
         />

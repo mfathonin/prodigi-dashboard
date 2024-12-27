@@ -8,7 +8,7 @@ export function Spinner({
   className?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 h-full w-full">
+    <div className="flex flex-col items-center justify-center gap-4 h-full w-full [&>span]:text-xs">
       <i
         className={cn(
           className,

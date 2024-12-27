@@ -19,13 +19,14 @@ export type BookItemProps = {
 export const BookItem = ({ book, selected, searchParams }: BookItemProps) => {
   let url: string = `/${book.uuid}`;
   if (searchParams) {
-    const urlSearchParams = new URLSearchParams(searchParams);
-    url += `?${urlSearchParams.toString()}`;
+    const urlSearchParams = new URLSearchParams(searchParams).toString();
+    if (urlSearchParams) url += `?${urlSearchParams}`;
   }
 
   return (
     <Link
       href={url}
+      prefetch={true}
       className={cn(
         "flex items-center group justify-between px-4 py-3 border-b last:border-0 border-zinc-200 dark:border-zinc-700 cursor-pointer hover:bg-zinc-100 dark:hover:bg-slate-900",
         selected
