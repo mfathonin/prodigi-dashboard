@@ -87,13 +87,17 @@ export async function POST(
     // Calculate percentage
     const percentage = (correctAnswers / totalQuestions) * 100;
 
-    return ApiResponseHandler.success({
+    const result = {
       profile,
       totalPoints,
       percentage,
       totalQuestions,
       correctAnswers,
-    });
+    };
+
+    console.log(1349, "submission result", { id: uuid, ...result });
+
+    return ApiResponseHandler.success(result);
   } catch (error) {
     console.error("Error processing quiz submission:", error);
     return ApiResponseHandler.error(UNKNOWN);

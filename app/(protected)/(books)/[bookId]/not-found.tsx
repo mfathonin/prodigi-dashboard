@@ -10,7 +10,7 @@ export default function NoBookSelected() {
           fill
         />
       </div>
-      <div className="space-2 text-center max-w-[249px]">
+      <div className="space-x-2 space-y-2 text-center max-w-[249px]">
         <p className="font-medium text-lg">Buku tidak ditemukan</p>
         <p className="text-xs text-slate-800 dark:text-slate-100">
           Pilih buku yang ada untuk dikelola. Atau buat buku baru
