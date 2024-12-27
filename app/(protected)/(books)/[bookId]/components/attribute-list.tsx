@@ -1,11 +1,10 @@
-import { createClient } from "@/lib/supaclient/server";
-import { AttributesRepository } from "@/repositories/attributes";
+import { BooksAttributes } from "@/models";
 
-export const AttributesList = async ({ bookId }: { bookId: string }) => {
-  const supabase = createClient();
-  const attributeRepo = new AttributesRepository(supabase);
-  const attributes = await attributeRepo.getBookAttributes(bookId);
-
+export const AttributesList = async ({
+  attributes,
+}: {
+  attributes: BooksAttributes[];
+}) => {
   return (
     <>
       {attributes.length > 0 && (
