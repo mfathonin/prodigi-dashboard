@@ -10,6 +10,7 @@ import { BooksContentsCount, ContentUpdateForm } from "@/models";
 
 import { useDialog } from "../dialog/provider";
 import { handleContentForm } from "./handler";
+import { toast } from "sonner";
 
 const {
   CANVAS_QR_PREFIX_ID,
@@ -41,8 +42,18 @@ export const Toolbar = ({ book }: { book: BooksContentsCount }) => {
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
       if (result) {
-        await handleContentForm(result as ContentUpdateForm);
-        router.refresh();
+        try {
+          await handleContentForm(result as ContentUpdateForm);
+          router.refresh();
+          toast.success("Konten berhasil ditambahkan", {
+            description: "Konten digital berhasil ditambahkan ke koleksi",
+          });
+        } catch (error) {
+          console.log("Error adding content", error);
+          toast.error("Gagal menambahkan konten", {
+            description: "Terjadi kesalahan saat menambahkan konten",
+          });
+        }
       }
     });
   };
