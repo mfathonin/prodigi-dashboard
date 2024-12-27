@@ -124,6 +124,24 @@ export class ContentsRepository implements Contents {
     return contentWithLink;
   }
 
+  async ensureQuizContentType(answerSheetId: string): Promise<void> {
+    const targetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${answerSheetId}`;
+
+    // Get content via link
+    try {
+      const content = await this.getContentLinkByTargetUrl(targetUrl);
+      if (!content) throw new Error("Content link not found");
+
+      // Update content type if needed
+      await this._db
+        .from("contents")
+        .update({ type: "quiz" })
+        .eq("link_id", content.link_id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async deleteContentsLink(contentId: string): Promise<void> {
     await this._db.from("contents").delete().eq("uuid", contentId);
   }
