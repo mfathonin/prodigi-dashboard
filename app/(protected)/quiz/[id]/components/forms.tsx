@@ -1,13 +1,15 @@
 "use client";
 
+import { useOptimistic, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useOptimistic, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { toast } from "sonner";
-import { getAnswerSheet } from "../handler";
+import { AnswerSheet } from "@/models";
+
 import {
   decreaseNOption,
   decreasePoints,
@@ -292,7 +294,7 @@ export const AnswerConfigForm = ({
   data,
 }: {
   answerSheetId: string;
-  data: Awaited<ReturnType<typeof getAnswerSheet>>;
+  data: AnswerSheet;
 }) => {
   const [edited, setEdited] = useState(false);
   const [isError, setIsError] = useState(false);
