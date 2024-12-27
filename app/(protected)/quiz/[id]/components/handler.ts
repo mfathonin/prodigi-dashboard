@@ -1,9 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supaclient/server";
-import { AnswerSheetRepository } from "@/repositories/answer-sheets";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+import { createClient } from "@/lib/supaclient/server";
+import { AnswerSheetRepository } from "@/repositories/answer-sheets";
+import { ContentsRepository } from "@/repositories/contents";
 
 const resetAnswerSheetConfigSchema = z.object({
   answerSheetId: z.string(),
@@ -46,6 +48,7 @@ const parseData = (formData: FormData, key: string) => {
 // Initialize the repository
 const supabase = createClient();
 const answerSheetRepo = new AnswerSheetRepository(supabase);
+const contentRepo = new ContentsRepository(supabase);
 
 /**
  * Functions format in this form-handler:
@@ -164,4 +167,9 @@ export const recreateAnswerSheet = async (formData: FormData) => {
   );
 
   revalidatePath(`/quiz/${answerSheetId}`);
+
+  // ensure content type is correct
+  await contentRepo.ensureQuizContentType(answerSheetId);
+
+  revalidatePath(`/${bookId}`);
 };

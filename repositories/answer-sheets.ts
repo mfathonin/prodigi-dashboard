@@ -1,10 +1,9 @@
 import { Database, Tables } from "@/models/supaservice.types";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { constants } from "@/lib/constants";
+import { AnswerSheet } from "@/models";
 
 const { MIN_OPTIONS, MAX_OPTIONS } = constants.quizConfig;
-
-type AnswerSheet = Tables<"answer_sheets">;
 
 interface AnswerSheets {
   getAnswerSheetById: (answerSheetId: string) => Promise<AnswerSheet | null>;

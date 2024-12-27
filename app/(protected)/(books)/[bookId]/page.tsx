@@ -1,17 +1,17 @@
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 
 import { constants } from "@/lib/constants";
 import { createClient } from "@/lib/supaclient/server";
 import { BookRepository } from "@/repositories/books";
 import { ContentsRepository } from "@/repositories/contents";
 
-import { AttributesList, AttributesLoading } from "./components/attribute-list";
+import { AttributesRepository } from "@/repositories/attributes";
+import { AttributesList } from "./components/attribute-list";
 import { ContentCard } from "./components/content-card";
-import { Toolbar } from "./components/toolbar";
-import { DialogProvider } from "./dialog/provider";
 import { NoContent } from "./components/no-content";
 import { NoMatchSearch } from "./components/no-match-search";
+import { Toolbar } from "./components/toolbar";
+import { DialogProvider } from "./dialog/provider";
 
 const {
   validation: { uuid },
@@ -32,8 +32,13 @@ export default async function BookContentPage({
   const supabase = createClient();
   const bookRepo = new BookRepository(supabase);
   const contentRepo = new ContentsRepository(supabase);
-  const book = await bookRepo.getBook(bookId);
-  const contents = await contentRepo.getBookContents(bookId);
+  const attributeRepo = new AttributesRepository(supabase);
+
+  const [book, contents, attributes] = await Promise.all([
+    bookRepo.getBook(bookId),
+    contentRepo.getBookContents(bookId),
+    attributeRepo.getBookAttributes(bookId),
+  ]);
 
   if (!book) return notFound();
 
@@ -49,9 +54,7 @@ export default async function BookContentPage({
         </p>
         <h4 className="h4 font-semibold">{book.title}</h4>
       </div>
-      <Suspense fallback={<AttributesLoading />}>
-        <AttributesList bookId={book.uuid} />
-      </Suspense>
+      <AttributesList attributes={attributes} />
       {/* Toolbar: Search | Downloads All QR | Add */}
       <Toolbar book={book} />
       <hr className="border-zinc-200 dark:border-zinc-700 mt-1" />

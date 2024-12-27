@@ -33,7 +33,7 @@ export async function redirectIfAuthenticated() {
   const supabase = createClient();
   const { data, error } = await supabase.auth.getUser();
   if (data.user != null) {
-    redirect("/");
+    redirect("/books");
   }
 }
 
