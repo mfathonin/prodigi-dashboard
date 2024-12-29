@@ -1,4 +1,4 @@
-import { DownloadButton } from "@/app/(public)/links/[[...paths]]/components/download-button";
+import { DownloadButton } from "@/components/ui/download-button";
 
 export default function PublicQuizPage() {
   return (

@@ -1,12 +1,13 @@
+import Image from "next/image";
+import { redirect } from "next/navigation";
+import { Metadata } from "next/types";
+
 import { createClient } from "@/lib/supaclient/server";
 import { BookContentsLink } from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
-import Image from "next/image";
+import { DownloadButton } from "@/components/ui/download-button";
+
 import { DownloadPage } from "./components/download-page";
-import { Redirector } from "./components/redirector";
-import { DownloadButton } from "./components/download-button";
-import { redirect } from "next/navigation";
-import { Metadata } from "next/types";
 
 export const metadata: Metadata = {
   title: "Prodigi | Links",
