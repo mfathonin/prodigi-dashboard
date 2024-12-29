@@ -55,6 +55,7 @@ export async function GET(
   const formattedLink = {
     id: contentData.id,
     title: contentData.title,
+    type: contentData.type,
     collectionId: contentData.book_id,
     createdAt: contentData.created_at,
     link: {
