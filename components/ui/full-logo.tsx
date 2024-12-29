@@ -21,6 +21,7 @@ export const FullLogo = ({ height, width, className }: FullLogoProps) => {
         src="/logo-long.png"
         alt="logo prodigi full"
         priority
+        loading="eager"
         fill
         sizes="30vw"
         style={{ objectFit: "contain", objectPosition: "left" }}
