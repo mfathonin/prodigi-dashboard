@@ -112,3 +112,21 @@ export function validateQuizContent(
     isQuizContent(content) && content.nQuestion > 0 && content.nOptions > 0
   );
 }
+
+export type CollectionLinkResponse = {
+  id: number | string;
+  title: string;
+  collectionId: string;
+  link: {
+    targetUrl: string;
+    url: string;
+  };
+  collection: {
+    id: number | string;
+    createdAt: string;
+    name: string;
+    updatedAt: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+};

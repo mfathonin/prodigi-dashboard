@@ -18,8 +18,11 @@ type BookContentsLink = Tables<"contents"> & {
 interface Contents {
   getBookContents(bookId: string): Promise<BookContentsLink[]>;
   upsertContentLink(contents: ContentUpdateForm): Promise<BookContentsLink>;
+  upsertQuiz(content: QuizUpdateForm): Promise<BookContentsLink>;
+  ensureQuizContentType(answerSheetId: string): Promise<void>;
   deleteContentsLink(contentId: string): Promise<void>;
   getContentByLink(path: string): Promise<BookContentsLink>;
+  getContentLinkByTargetUrl(targetUrl: string): Promise<BookContentsLink>;
 }
 
 export class ContentsRepository implements Contents {
@@ -148,19 +151,22 @@ export class ContentsRepository implements Contents {
   }
 
   async getContentByLink(path: string): Promise<BookContentsLink> {
-    const response = await this._db
+    const { data: links, error } = await this._db
       .from("link")
       .select("*")
       .eq("path", path)
-      .single();
-    if (response.error) throw response.error;
-    const links = response.data;
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!links) throw new Error("Link not found");
 
     const contentResponse = await this._db
       .from("contents")
       .select("*")
       .eq("link_id", links.uuid)
       .single();
+
     if (contentResponse.error) throw contentResponse.error;
 
     const data: BookContentsLink = {
