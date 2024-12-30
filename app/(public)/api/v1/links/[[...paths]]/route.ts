@@ -53,6 +53,7 @@ export async function GET(
       {
         id: contentData.id,
         title: contentData.title,
+        type: contentData.type,
         collectionId: contentData.book_id,
         createdAt: contentData.created_at,
         link: {
@@ -61,7 +62,7 @@ export async function GET(
         },
         updatedAt: contentData.updated_at,
         collection,
-      } as CollectionLinkResponse,
+      } satisfies CollectionLinkResponse,
     ],
   };
 

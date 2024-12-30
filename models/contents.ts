@@ -116,6 +116,7 @@ export function validateQuizContent(
 export type CollectionLinkResponse = {
   id: number | string;
   title: string;
+  type: string;
   collectionId: string;
   link: {
     targetUrl: string;

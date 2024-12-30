@@ -44,6 +44,7 @@ export async function GET(
       id: contentData.uuid,
       collectionId: book_id,
       title: contentData.title,
+      type: contentData.type,
       createdAt: contentData.created_at,
       updatedAt: contentData.updated_at,
       link: {
@@ -56,7 +57,7 @@ export async function GET(
         createdAt: collection.created_at,
         updatedAt: collection.updated_at,
       },
-    } as CollectionLinkResponse);
+    } satisfies CollectionLinkResponse);
   } catch (error) {
     console.error(
       1349,
