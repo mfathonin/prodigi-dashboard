@@ -122,7 +122,7 @@ export async function GET(
     const { answers, created_at, updated_at, ...answerSheets } = result;
 
     return ApiResponseHandler.success(answerSheets);
-  } catch (error: PostgrestError | unknown) {
+  } catch (error: unknown) {
     console.error(1349, `get.quiz.${id}`, error);
     return ApiResponseHandler.error(UNKNOWN);
   }
