@@ -1,3 +1,4 @@
+import type { PostgrestError } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { ApiResponseHandler } from "@/lib/api-response";
@@ -33,12 +34,11 @@ export async function POST(
   const supabase = await createAdminClient();
   const answerSheetRepo = new AnswerSheetRepository(supabase);
 
-  try {
-    const uuid = params.uuid[0];
-    if (!uuidValidation.pattern.test(uuid)) {
-      return ApiResponseHandler.error(INVALID_UUID);
-    }
+  const uuid = params.uuid[0];
+  if (!uuidValidation.pattern.test(uuid))
+    return ApiResponseHandler.error(INVALID_UUID);
 
+  try {
     let rawBody;
     try {
       rawBody = await request.json();
@@ -99,7 +99,31 @@ export async function POST(
 
     return ApiResponseHandler.success(result);
   } catch (error) {
-    console.error("Error processing quiz submission:", error);
+    console.error(1349, `quiz.submission.${uuid}`, error);
+    return ApiResponseHandler.error(UNKNOWN);
+  }
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: { uuid: string[] } }
+) {
+  const id = params.uuid[0];
+  const isValidId = uuidValidation.pattern.test(id);
+  if (!isValidId) return ApiResponseHandler.error(QUIZ_MISSING_FIELDS);
+
+  const supabase = await createAdminClient();
+  const repo = new AnswerSheetRepository(supabase);
+
+  try {
+    const result = await repo.getAnswerSheetById(id);
+    if (!result) return ApiResponseHandler.error(QUIZ_NOT_FOUND);
+
+    const { answers, created_at, updated_at, ...answerSheets } = result;
+
+    return ApiResponseHandler.success(answerSheets);
+  } catch (error: PostgrestError | unknown) {
+    console.error(1349, `get.quiz.${id}`, error);
     return ApiResponseHandler.error(UNKNOWN);
   }
 }
