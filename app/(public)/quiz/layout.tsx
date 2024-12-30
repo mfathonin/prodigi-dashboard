@@ -43,7 +43,7 @@ export default async function QuizPublicLayout({
       <div
         className={cn(
           bodyHeight,
-          "mx-auto py-6 z-10 bg-background sticky left-0 shadow-md ${bodyHeight}"
+          "mx-auto py-6 z-10 bg-background sticky left-0 shadow-md"
         )}
       >
         <div className="container px-3 md:px-6 h-full">{children}</div>
