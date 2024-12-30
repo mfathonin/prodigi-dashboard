@@ -110,7 +110,7 @@ export async function GET(
 ) {
   const id = params.uuid[0];
   const isValidId = uuidValidation.pattern.test(id);
-  if (!isValidId) return ApiResponseHandler.error(QUIZ_MISSING_FIELDS);
+  if (!isValidId) return ApiResponseHandler.error(INVALID_UUID);
 
   const supabase = await createAdminClient();
   const repo = new AnswerSheetRepository(supabase);
