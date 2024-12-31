@@ -135,7 +135,7 @@ export async function GET(
     bookPromise.status === "fulfilled" &&
       Object.assign(answerSheets, { bookTitle: bookPromise.value?.title });
     contentPromise.status === "fulfilled" &&
-      Object.assign(answerSheets, { contentTitle: contentPromise.value.title });
+      Object.assign(answerSheets, { contentTitle: contentPromise.value?.title });
 
     return ApiResponseHandler.success(answerSheets);
   } catch (error: unknown) {
