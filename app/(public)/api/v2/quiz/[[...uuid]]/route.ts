@@ -1,10 +1,11 @@
-import type { PostgrestError } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { ApiResponseHandler } from "@/lib/api-response";
 import { constants } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supaclient/admin";
 import { AnswerSheetRepository } from "@/repositories/answer-sheets";
+import { BookRepository } from "@/repositories/books";
+import { ContentsRepository } from "@/repositories/contents";
 
 const {
   validation: { uuid: uuidValidation },
@@ -120,6 +121,21 @@ export async function GET(
     if (!result) return ApiResponseHandler.error(QUIZ_NOT_FOUND);
 
     const { answers, created_at, updated_at, ...answerSheets } = result;
+
+    const contentRepo = new ContentsRepository(supabase);
+    const bookRepo = new BookRepository(supabase);
+
+    const [bookPromise, contentPromise] = await Promise.allSettled([
+      bookRepo.getBook(answerSheets.book_id),
+      contentRepo.getContentLinkByTargetUrl(
+        `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${id}`
+      ),
+    ]);
+
+    bookPromise.status === "fulfilled" &&
+      Object.assign(answerSheets, { bookTitle: bookPromise.value?.title });
+    contentPromise.status === "fulfilled" &&
+      Object.assign(answerSheets, { contentTitle: contentPromise.value.title });
 
     return ApiResponseHandler.success(answerSheets);
   } catch (error: unknown) {
