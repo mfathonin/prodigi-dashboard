@@ -114,7 +114,10 @@ export const ContentCard = ({
   const handleContentClick = () => {
     switch (content.type) {
       case "quiz":
-        if (link.targetUrl) window.open(link.targetUrl, "_blank");
+        if (link.targetUrl) {
+          const targetUrl = new URL(link.targetUrl);
+          window.open(targetUrl.pathname, "_blank");
+        }
         break;
       case "content":
         handleUpdateContent();

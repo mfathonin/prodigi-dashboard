@@ -181,12 +181,12 @@ export class ContentsRepository implements Contents {
   }
 
   async getContentLinkByTargetUrl(
-    targetUrl: string
+    targetPath: string
   ): Promise<BookContentsLink> {
     const response = await this._db
       .from("link")
       .select("*")
-      .eq("target_url", targetUrl)
+      .ilike("target_url", `%${targetPath}%`)
       .single();
     if (response.error) throw response.error;
 
