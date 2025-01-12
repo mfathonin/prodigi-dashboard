@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Prodigi | Dashboard",
+  title: "Prodigi",
   description: "Dashboard for managing digital content in Prodigi App",
   icons: "/favicon.png",
 };
@@ -23,6 +23,13 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en">
       <head>
+        <link
+          rel="preload"
+          href="https://unpkg.com/boxicons@2.1.4/fonts/boxicons.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link
           href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
           rel="stylesheet"

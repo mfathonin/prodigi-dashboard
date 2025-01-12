@@ -5,7 +5,7 @@ export default function Loading() {
     <div className="flex justify-center items-center h-36">
       <Spinner>
         <span className="sr-only">Memuat</span>
-        <span className="text-xs">Memuat</span>
+        <span>Memuat</span>
       </Spinner>
     </div>
   );

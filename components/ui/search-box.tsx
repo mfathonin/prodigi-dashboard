@@ -37,7 +37,7 @@ export const SearchBox = ({
     if (value === "") {
       params.delete(key);
     } else {
-      params.set(key, value);
+      params.set(key, value.trim());
     }
     return `${location.pathname}?${params.toString()}`;
   };
@@ -61,7 +61,7 @@ export const SearchBox = ({
       onChange={handleSearch}
       value={searchQuery}
       placeholder={placeholder}
-      className="rounded-full mx-[2px] bg-background"
+      className="rounded-full mx-[2px] bg-background focus:!ring-sky-300 dark:focus:!ring-sky-800"
     />
   );
 };

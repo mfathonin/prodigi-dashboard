@@ -1,6 +1,11 @@
+import { constants } from "@/lib/constants";
 import { BooksAttributes, Database, QueryOptions, Tables } from "@/models";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { AttributesRepository } from "./attributes";
+
+const {
+  validation: { uuid },
+} = constants;
 
 type Books = Tables<"books">;
 type BooksContentsCount = Books & { contents: number };
@@ -9,7 +14,7 @@ type BookWithAttributes = Books & { attributes?: BooksAttributes[] };
 interface Book {
   db: any;
   getBooks(queryOptions?: QueryOptions): Promise<BooksContentsCount[]>;
-  getBook(id: string): Promise<BooksContentsCount>;
+  getBook(id: string): Promise<BooksContentsCount | undefined>;
   upsertBook(book: BookWithAttributes): Promise<BookWithAttributes>;
   deleteBook(id: string): Promise<void>;
 }
@@ -23,18 +28,40 @@ export class BookRepository implements Book {
     this.attributesRepo = new AttributesRepository(_db);
   }
 
-  async getBooks(queryOptions?: QueryOptions) {
-    const filter = queryOptions?.filter ?? [];
+  async getBooks(queryOptions?: Partial<QueryOptions>) {
+    const { filter } = queryOptions ?? {};
     let filteredBookIds: string[] = [];
-    if (filter && filter.length > 0) {
+    const isNoAttribute = filter?.includes("none");
+    const isFilterActive = (filter && filter.length > 0) || isNoAttribute;
+
+    if (isNoAttribute) {
+      const { data, error } = await this.db
+        .from("books")
+        .select("*, attributes:books_attributes(id)");
+
+      if (error) throw error;
+      filteredBookIds = data
+        .filter((d: any) => d.attributes.length === 0)
+        .map((d: any) => d.uuid);
+    } else if (filter && filter.length > 0 && !isNoAttribute) {
+      const filtered = filter.filter((id: string) => uuid.pattern.test(id));
+
       const { data, error } = await this.db
         .from("books_attributes")
         .select("book_id")
-        .in("attribute_id", filter);
+        .in("attribute_id", filtered);
+
       if (error) throw error;
+
       filteredBookIds = data.map((d: any) => d.book_id);
     }
 
+    // If no book is found with the applied filter, return an empty book list
+    if (isFilterActive && filteredBookIds.length === 0) {
+      return [];
+    }
+
+    // Start building the query for Search and Sort
     const query = this.db.from("books").select("*, contents (id)");
 
     if (queryOptions) {
@@ -42,10 +69,12 @@ export class BookRepository implements Book {
       if (search) {
         query.ilike("title", `%${search}%`);
       }
-      if (filteredBookIds.length > 0) query.in("uuid", filteredBookIds);
-
-      if (sortBy && orderBy)
+      if (isFilterActive) {
+        query.in("uuid", filteredBookIds);
+      }
+      if (sortBy && orderBy) {
         query.order(sortBy, { ascending: orderBy === "asc" });
+      }
     }
 
     const response = await query;
@@ -66,13 +95,19 @@ export class BookRepository implements Book {
   }
 
   async getBook(id: string) {
+    const isValidUUID = uuid.pattern.test(id);
+    if (!isValidUUID) return undefined;
+
     const response = await this.db
       .from("books")
       .select("*, contents (id)")
       .eq("uuid", id)
       .single();
 
-    if (response.error) throw response.error;
+    if (response.error?.code === "PGRST116") return undefined;
+    if (response.error) {
+      throw response.error;
+    }
 
     const book = {
       ...response.data,

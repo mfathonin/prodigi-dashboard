@@ -1,4 +1,10 @@
-import { ContentUpdateForm, Database, Tables } from "@/models";
+import {
+  ContentUpdateForm,
+  Database,
+  ExternalContentUpdateForm,
+  QuizUpdateForm,
+  Tables,
+} from "@/models";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 type BookContentsLink = Tables<"contents"> & {
@@ -12,8 +18,11 @@ type BookContentsLink = Tables<"contents"> & {
 interface Contents {
   getBookContents(bookId: string): Promise<BookContentsLink[]>;
   upsertContentLink(contents: ContentUpdateForm): Promise<BookContentsLink>;
+  upsertQuiz(content: QuizUpdateForm): Promise<BookContentsLink>;
+  ensureQuizContentType(answerSheetId: string): Promise<void>;
   deleteContentsLink(contentId: string): Promise<void>;
   getContentByLink(path: string): Promise<BookContentsLink>;
+  getContentLinkByTargetPath(targetPath: string): Promise<BookContentsLink>;
 }
 
 export class ContentsRepository implements Contents {
@@ -41,7 +50,7 @@ export class ContentsRepository implements Contents {
   }
 
   async upsertContentLink(
-    _content: ContentUpdateForm
+    _content: ExternalContentUpdateForm
   ): Promise<BookContentsLink> {
     const { path, targetUrl, linkId, ...content } = _content;
     const link = {
@@ -65,15 +74,17 @@ export class ContentsRepository implements Contents {
       link_id: updatedLink?.uuid,
       book_id: content.bookId,
     };
+    if (content.uuid === "")
+      Object.assign(contentWithLink, { type: content.type });
 
     const response = await this._db
       .from("contents")
       .upsert(contentWithLink)
       .select(
         `
-      *,
-      link (id, path, targetUrl: target_url)
-    `
+          *,
+          link (id, path, targetUrl: target_url)
+        `
       )
       .single();
     if (response.error) throw response.error;
@@ -82,23 +93,115 @@ export class ContentsRepository implements Contents {
     return savedContents;
   }
 
+  async upsertQuiz(content: QuizUpdateForm): Promise<BookContentsLink> {
+    // 1. create new answerSheet -> title, nQuestion, nOptions, answers, book_id
+    const { nQuestion, nOptions, ...contentData } = content;
+
+    const answerSheetData = {
+      book_id: contentData.bookId,
+      counts: nQuestion,
+      answers: Array(nQuestion).fill(0),
+      n_options: Array(nQuestion).fill(nOptions),
+      points: Array(nQuestion).fill(1),
+    };
+
+    const answerSheetResponse = await this._db
+      .from("answer_sheets")
+      .upsert(answerSheetData)
+      .select("id, uuid")
+      .single();
+
+    if (answerSheetResponse.error) throw answerSheetResponse.error;
+
+    // 2. compose targetUrl for link -> /quiz/${answerSheet.id}
+    const answerSheetId = answerSheetResponse.data.uuid;
+    const targetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${answerSheetId}`;
+
+    // 3. continue with existing flow like in upsertContentLink
+    const contentWithLink = await this.upsertContentLink({
+      ...contentData,
+      targetUrl,
+      type: "quiz",
+    });
+
+    return contentWithLink;
+  }
+
+  async ensureQuizContentType(answerSheetId: string): Promise<void> {
+    const targetPath = `/quiz/${answerSheetId}`;
+
+    // Get content via link
+    const content = await this.getContentLinkByTargetPath(targetPath);
+    if (!content) throw new Error("Content link not found");
+
+    if (content.type !== "quiz")
+      try {
+        // Update content type if needed
+        await this._db
+          .from("contents")
+          .update({ type: "quiz" })
+          .eq("link_id", content.link_id);
+      } catch (error) {
+        throw new Error("Update content type failed");
+      }
+  }
+
   async deleteContentsLink(contentId: string): Promise<void> {
     await this._db.from("contents").delete().eq("uuid", contentId);
   }
 
   async getContentByLink(path: string): Promise<BookContentsLink> {
-    const response = await this._db.from("link").select("*").eq("path", path).single();
-    if (response.error) throw response.error;
-    const links = response.data;
+    const { data: links, error } = await this._db
+      .from("link")
+      .select("*")
+      .eq("path", path)
+      .limit(1)
+      .maybeSingle();
 
-    const contentResponse = await this._db.from("contents").select("*").eq("link_id", links.uuid).single();
+    if (error) throw error;
+    if (!links) throw new Error("Link not found");
+
+    const contentResponse = await this._db
+      .from("contents")
+      .select("*")
+      .eq("link_id", links.uuid)
+      .single();
+
     if (contentResponse.error) throw contentResponse.error;
 
     const data: BookContentsLink = {
       ...contentResponse.data,
       link: {
         ...links,
-        targetUrl: links.target_url
+        targetUrl: links.target_url,
+      },
+    };
+
+    return data;
+  }
+
+  async getContentLinkByTargetPath(
+    targetPath: string
+  ): Promise<BookContentsLink> {
+    const response = await this._db
+      .from("link")
+      .select("*")
+      .ilike("target_url", `%${targetPath}%`)
+      .single();
+    if (response.error) throw response.error;
+
+    const contentResponse = await this._db
+      .from("contents")
+      .select("*")
+      .eq("link_id", response.data.uuid)
+      .single();
+    if (contentResponse.error) throw contentResponse.error;
+
+    const data: BookContentsLink = {
+      ...contentResponse.data,
+      link: {
+        ...response.data,
+        targetUrl: response.data.target_url,
       },
     };
 

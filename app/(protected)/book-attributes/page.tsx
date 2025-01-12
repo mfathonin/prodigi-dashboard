@@ -2,6 +2,11 @@ import { createClient } from "@/lib/supaclient/server";
 import { AttributesRepository } from "@/repositories/attributes";
 import { AttributeForm } from "./components/attribute-form";
 import { DeleteButton } from "./components/delete-button";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Prodigi | Attributes Management",
+};
 
 export default async function BookAttributesPage() {
   const supabase = createClient();

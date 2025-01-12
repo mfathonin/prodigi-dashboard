@@ -33,7 +33,7 @@ export async function redirectIfAuthenticated() {
   const supabase = createClient();
   const { data, error } = await supabase.auth.getUser();
   if (data.user != null) {
-    redirect("/");
+    redirect("/books");
   }
 }
 
@@ -59,7 +59,7 @@ export async function checkAdminAccess() {
 }
 
 export async function deleteUser(userId: string) {
-  const supabaseAdmin = createAdminClient();
+  const supabaseAdmin = await createAdminClient();
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
   if (error) {
     throw error;
@@ -68,7 +68,7 @@ export async function deleteUser(userId: string) {
 }
 
 export async function inviteUser(email: string) {
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
   const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/set-password`,
   });
