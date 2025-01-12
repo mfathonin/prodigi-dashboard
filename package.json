@@ -1,6 +1,6 @@
 {
   "name": "prodigi-dashboard",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,13 +8,13 @@
     "start": "next start",
     "lint": "next lint",
     "env:clear": "bash ./scripts/clear_env.sh",
-    "supa:start": "bash -c 'source ./scripts/set_env.sh && npx supabase start'",
-    "supa:stop": "bash -c 'npx supabase stop --no-backup && source ./scripts/clear_env.sh'",
-    "supa:typegen": "bash -c 'source ./scripts/set_env.sh && npx supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" > models/supaservice.types.ts'",
-    "supa:check": "bash -c 'source ./scripts/set_env.sh && echo \"App Link: $NEXT_PUBLIC_SUPABASE_URL\nDB URL: $SUPABASE_DB_URL\" && npx supabase status'",
-    "supa:db:backup": "bash -c 'source ./scripts/set_env.sh && source ./scripts/prepare_backup.sh \"$1\" && npx supabase db dump --data-only -f \"supabase/backups/$BACKUP_FILENAME\" --db-url \"$SUPABASE_DB_URL\"' --",
+    "supa:start": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase start'",
+    "supa:stop": "bash -c 'pnpm dlx supabase stop --no-backup && source ./scripts/clear_env.sh'",
+    "supa:typegen": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" > models/supaservice.types.ts'",
+    "supa:check": "bash -c 'source ./scripts/set_env.sh && echo \"App Link: $NEXT_PUBLIC_SUPABASE_URL\nDB URL: $SUPABASE_DB_URL\" && pnpm dlx supabase status'",
+    "supa:db:backup": "bash -c 'source ./scripts/set_env.sh && source ./scripts/prepare_backup.sh \"$1\" && pnpm dlx supabase db dump --data-only -f \"supabase/backups/$BACKUP_FILENAME\" --db-url \"$SUPABASE_DB_URL\"' --",
     "supa:migration": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase migration list --db-url \"$SUPABASE_DB_URL\"'",
-    "supa:migration:repair": "node scripts/migration-repair.js",
+    "supa:migration:repair": "bash -c 'source ./scripts/set_env.sh && node scripts/migration-repair.js'",
     "supa:migration:pull": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase db diff -f \"${1:-diff}\" --db-url \"$SUPABASE_DB_URL\"' --",
     "supa:migration:push": "bash -c 'source ./scripts/set_env.sh && pnpm dlx supabase db push --db-url \"$SUPABASE_DB_URL\" --debug --include-all'",
     "supa:migration:down": "bash -c 'source ./scripts/set_env.sh && node scripts/migration-down.js \"$@\"' --"

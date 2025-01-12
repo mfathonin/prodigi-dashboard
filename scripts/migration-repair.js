@@ -9,7 +9,7 @@ const rl = readline.createInterface({
 function getMigrationList() {
   try {
     console.log("Fetching migration list...");
-    const output = execSync("npx supabase migration list", {
+    const output = execSync("pnpm dlx supabase migration list", {
       encoding: "utf-8",
     });
 
@@ -44,6 +44,7 @@ function promptMigrations(migrations) {
 
     function renderMigrations() {
       console.clear();
+      console.log(`Migration for ${process.env.SUPABASE_DB_URL}`);
       console.log(
         "Select migrations to mark as applied (use spacebar to toggle, enter to confirm):"
       );
@@ -125,13 +126,17 @@ async function main() {
   try {
     if (toApply.length > 0) {
       execSync(
-        `npx supabase migration repair ${toApply.join(" ")} --status applied`,
+        `pnpm dlx supabase migration repair ${toApply.join(
+          " "
+        )} --status applied`,
         { stdio: "inherit" }
       );
     }
     if (toRevert.length > 0) {
       execSync(
-        `npx supabase migration repair ${toRevert.join(" ")} --status reverted`,
+        `pnpm dlx supabase migration repair ${toRevert.join(
+          " "
+        )} --status reverted`,
         { stdio: "inherit" }
       );
     }
