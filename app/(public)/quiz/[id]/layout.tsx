@@ -23,9 +23,7 @@ export default async function QuizLayout({
   let contentLink;
   let isAuthenticated: boolean = false;
   const [ct, auth] = await Promise.allSettled([
-    contentRepo.getContentLinkByTargetUrl(
-      `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${params.id}`
-    ),
+    contentRepo.getContentLinkByTargetPath(`/quiz/${params.id}`),
     supabase.auth.getUser(),
   ]);
 

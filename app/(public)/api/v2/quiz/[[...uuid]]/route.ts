@@ -127,15 +127,15 @@ export async function GET(
 
     const [bookPromise, contentPromise] = await Promise.allSettled([
       bookRepo.getBook(answerSheets.book_id),
-      contentRepo.getContentLinkByTargetUrl(
-        `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${id}`
-      ),
+      contentRepo.getContentLinkByTargetPath(`/quiz/${id}`),
     ]);
 
     bookPromise.status === "fulfilled" &&
       Object.assign(answerSheets, { bookTitle: bookPromise.value?.title });
     contentPromise.status === "fulfilled" &&
-      Object.assign(answerSheets, { contentTitle: contentPromise.value?.title });
+      Object.assign(answerSheets, {
+        contentTitle: contentPromise.value?.title,
+      });
 
     return ApiResponseHandler.success(answerSheets);
   } catch (error: unknown) {
