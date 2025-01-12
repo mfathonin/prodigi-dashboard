@@ -22,7 +22,7 @@ interface Contents {
   ensureQuizContentType(answerSheetId: string): Promise<void>;
   deleteContentsLink(contentId: string): Promise<void>;
   getContentByLink(path: string): Promise<BookContentsLink>;
-  getContentLinkByTargetUrl(targetUrl: string): Promise<BookContentsLink>;
+  getContentLinkByTargetPath(targetPath: string): Promise<BookContentsLink>;
 }
 
 export class ContentsRepository implements Contents {
@@ -128,10 +128,10 @@ export class ContentsRepository implements Contents {
   }
 
   async ensureQuizContentType(answerSheetId: string): Promise<void> {
-    const targetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${answerSheetId}`;
+    const targetPath = `/quiz/${answerSheetId}`;
 
     // Get content via link
-    const content = await this.getContentLinkByTargetUrl(targetUrl);
+    const content = await this.getContentLinkByTargetPath(targetPath);
     if (!content) throw new Error("Content link not found");
 
     if (content.type !== "quiz")
@@ -180,7 +180,7 @@ export class ContentsRepository implements Contents {
     return data;
   }
 
-  async getContentLinkByTargetUrl(
+  async getContentLinkByTargetPath(
     targetPath: string
   ): Promise<BookContentsLink> {
     const response = await this._db
