@@ -1,16 +1,21 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.merahputihperkasa.prodigi",
       "sha256_cert_fingerprints": [
-        "14:6B:FB:2A:46:7A:96:93:6A:95:5C:3E:57:A3:6F:63:23:80:DF:A1:89:07:F5:C7:78:D6:93:F5:23:33:E4:0B"
+        "14:6B:FB:2A:46:7A:96:93:6A:95:5C:3E:57:A3:6F:63:23:80:DF:A1:89:07:F5:C7:78:D6:93:F5:23:33:E4:0B",
+        "3B:51:13:6B:03:29:47:56:1E:26:0E:09:6E:C1:D4:C8:0C:46:18:27:E7:6B:4C:4B:BD:A3:0F:0E:7D:1B:9C:81"
       ]
     }
   },
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.merahputihperkasa.prodigi",
@@ -20,7 +25,9 @@
     }
   },
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.merahputihperkasa.prodigi",
