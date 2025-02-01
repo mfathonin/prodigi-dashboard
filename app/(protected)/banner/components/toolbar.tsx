@@ -1,5 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { ChangeEventHandler, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,16 +29,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { constants } from "@/lib/constants";
 import { createClient } from "@/lib/supaclient/client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { ChangeEventHandler, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
 import { useBannerDialog } from "../dialog-context";
+
+const urlValidation = constants.validation.url;
 
 const bannerSchema = z.object({
   image: (typeof window === "undefined"
@@ -40,10 +44,7 @@ const bannerSchema = z.object({
     .string()
     .min(1, "Link tidak boleh kosong")
     .url("URL tidak valid")
-    .regex(
-      /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i,
-      "URL tidak valid"
-    ),
+    .regex(urlValidation.pattern, urlValidation.message),
 });
 
 type BannerSchema = z.infer<typeof bannerSchema>;

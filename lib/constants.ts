@@ -118,7 +118,8 @@ export const constants = {
       message: "UUID tidak valid",
     },
     url: {
-      pattern: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+      pattern:
+        /^(https?:\/\/)?([\w.-]+(?:\.[\w.-]+)+)(\/[\w\-._~:\/#\[\]@!$&'()*+,;=]*)?(\?([\w\-._~:%\/?#\[\]@!$&'()*+,;=]*))?$/,
       message: "URL tidak valid",
     },
   },

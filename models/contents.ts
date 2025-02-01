@@ -1,5 +1,10 @@
-import { ContentsRepository } from "@/repositories/contents";
 import { z } from "zod";
+
+import { constants } from "@/lib/constants";
+import { ContentsRepository } from "@/repositories/contents";
+
+const urlValidation: { pattern: RegExp; message: string } =
+  constants.validation.url;
 
 export type ContentType = "quiz" | "content";
 
@@ -35,15 +40,13 @@ export const contentSchema = z
   })
   .refine(
     (data) => {
-      const urlPattern =
-        /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
       if (data.type === "content")
-        return data.targetUrl && urlPattern.test(data.targetUrl);
+        return data.targetUrl && urlValidation.pattern.test(data.targetUrl);
       return true;
     },
     {
       path: ["targetUrl"],
-      message: "URL tidak valid",
+      message: urlValidation.message,
     }
   );
 
