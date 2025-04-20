@@ -306,7 +306,7 @@ export const AnswerConfigForm = ({
     id: answerSheetId,
     nOptions: data.n_options[index] ?? 0,
     points: data.points[index] ?? 0,
-    answer: data.answers[index] ?? 0,
+    answer: (data.answers as (number | number[])[])[index] ?? 0,
   });
 
   return (

@@ -4,7 +4,7 @@ type QuestionConfig = {
   id: string;
   nOptions: number;
   points: number;
-  answer: number;
+  answer: number | number[];
 }
 
 export const getConfigByIndex = (index: number, answerSheet: AnswerSheet): QuestionConfig => {
@@ -25,6 +25,6 @@ export const getConfigByIndex = (index: number, answerSheet: AnswerSheet): Quest
     id: uuid,
     nOptions: n_options[index] ?? 0,
     points: points[index] ?? 0,
-    answer: answers[index] ?? 0,
+    answer: (answers as (number | number[])[])[index] ?? 0,
   };
 };

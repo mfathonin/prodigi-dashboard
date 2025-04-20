@@ -16,7 +16,7 @@ type OptionsEditorProps = {
   data: {
     nOptions: number;
     points: number;
-    answer: number;
+    answer: number | number[];
   };
   index: number;
   onEdit: (value: string) => void;
@@ -25,7 +25,7 @@ type OptionsEditorProps = {
 export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
   const { nOptions, answer } = data;
 
-  const [answerState, setAnswerState] = useState(answer);
+  const [answerState, setAnswerState] = useState<number | number[]>(answer);
 
   const defaultOptions = (className?: string) =>
     Array.from({ length: nOptions }, (_, index) => (
@@ -62,24 +62,45 @@ export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
       <Input
         type="hidden"
         name="answer"
-        value={answerState}
+        value={
+          !Array.isArray(answerState)
+            ? answerState
+            : answerState.map((e) => e.toString())
+        }
         onChange={(e) => setAnswerState(parseInt(e.target.value))}
       />
 
-      <ToggleGroup
-        className="flex gap-2 w-full mt-3"
-        type="single"
-        value={answerState.toString()}
-        onValueChange={(value) => {
-          setAnswerState(parseInt(value));
-          onEdit(value);
-        }}
-      >
-        {options(
-          nOptions,
-          "flex-1 data-[state=on]:bg-green-400 data-[state=on]:text-white dark:data-[state=on]:bg-green-800"
-        )}
-      </ToggleGroup>
+      {Array.isArray(answerState) ? (
+        <ToggleGroup
+          className="flex gap-2 w-full mt-3"
+          type="multiple"
+          value={answerState.map((e) => e.toString())}
+          onValueChange={(value) => {
+            setAnswerState(value.map((e) => parseInt(e)));
+            onEdit(value.map((e) => parseInt(e)).toString());
+          }}
+        >
+          {options(
+            nOptions,
+            "flex-1 data-[state=on]:bg-green-400 data-[state=on]:text-white dark:data-[state=on]:bg-green-800"
+          )}
+        </ToggleGroup>
+      ) : (
+        <ToggleGroup
+          className="flex gap-2 w-full mt-3"
+          type="single"
+          value={answerState.toString()}
+          onValueChange={(value) => {
+            setAnswerState(parseInt(value));
+            onEdit(value);
+          }}
+        >
+          {options(
+            nOptions,
+            "flex-1 data-[state=on]:bg-green-400 data-[state=on]:text-white dark:data-[state=on]:bg-green-800"
+          )}
+        </ToggleGroup>
+      )}
     </div>
   );
 };
