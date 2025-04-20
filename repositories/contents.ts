@@ -18,8 +18,8 @@ type BookContentsLink = Tables<"contents"> & {
 interface Contents {
   getBookContents(bookId: string): Promise<BookContentsLink[]>;
   upsertContentLink(contents: ContentUpdateForm): Promise<BookContentsLink>;
-  upsertQuiz(content: QuizUpdateForm): Promise<BookContentsLink>;
-  ensureQuizContentType(answerSheetId: string): Promise<void>;
+  upsertAnswerSheet(content: QuizUpdateForm): Promise<BookContentsLink>;
+  ensureAnswerSheetContentType(answerSheetId: string): Promise<void>;
   deleteContentsLink(contentId: string): Promise<void>;
   getContentByLink(path: string): Promise<BookContentsLink>;
   getContentLinkByTargetPath(targetPath: string): Promise<BookContentsLink>;
@@ -93,7 +93,7 @@ export class ContentsRepository implements Contents {
     return savedContents;
   }
 
-  async upsertQuiz(content: QuizUpdateForm): Promise<BookContentsLink> {
+  async upsertAnswerSheet(content: QuizUpdateForm): Promise<BookContentsLink> {
     // 1. create new answerSheet -> title, nQuestion, nOptions, answers, book_id
     const { nQuestion, nOptions, ...contentData } = content;
 
@@ -121,25 +121,25 @@ export class ContentsRepository implements Contents {
     const contentWithLink = await this.upsertContentLink({
       ...contentData,
       targetUrl,
-      type: "quiz",
+      type: "answer_sheet",
     });
 
     return contentWithLink;
   }
 
-  async ensureQuizContentType(answerSheetId: string): Promise<void> {
+  async ensureAnswerSheetContentType(answerSheetId: string): Promise<void> {
     const targetPath = `/quiz/${answerSheetId}`;
 
     // Get content via link
     const content = await this.getContentLinkByTargetPath(targetPath);
     if (!content) throw new Error("Content link not found");
 
-    if (content.type !== "quiz")
+    if (content.type !== "answer_sheet")
       try {
         // Update content type if needed
         await this._db
           .from("contents")
-          .update({ type: "quiz" })
+          .update({ type: "answer_sheet" })
           .eq("link_id", content.link_id);
       } catch (error) {
         throw new Error("Update content type failed");

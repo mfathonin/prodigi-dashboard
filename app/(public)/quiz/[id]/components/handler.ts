@@ -169,7 +169,7 @@ export const recreateAnswerSheet = async (formData: FormData) => {
   revalidatePath(`/quiz/${answerSheetId}`);
 
   // ensure content type is correct
-  await contentRepo.ensureQuizContentType(answerSheetId);
+  await contentRepo.ensureAnswerSheetContentType(answerSheetId);
 
   revalidatePath(`/${bookId}`);
 };

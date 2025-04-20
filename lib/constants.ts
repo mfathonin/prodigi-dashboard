@@ -9,7 +9,8 @@ export const constants = {
   CONTENT: {
     LABEL: {
       content: "URL",
-      quiz: "Kuis",
+      exercise: "Kuis",
+      answer_sheet: "Lembar jawab",
     },
     OPTIONS_LABEL: ["A", "B", "C", "D", "E"],
   },

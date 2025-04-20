@@ -1,9 +1,9 @@
 import {
   ContentUpdateForm,
   isExternalContent,
-  isQuizContent,
+  isAnswerSheetContent,
   validateExternalContent,
-  validateQuizContent,
+  validateAnswerSheetContent,
 } from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -21,16 +21,16 @@ const addContent = async (
   await new ContentsRepository(supabase).upsertContentLink(content);
 };
 
-const addQuiz = async (
+const addAnswerSheet = async (
   content: ContentUpdateForm,
   supabase: SupabaseClient
 ) => {
-  if (!isQuizContent(content)) {
-    throw new Error("Invalid quiz content");
+  if (!isAnswerSheetContent(content)) {
+    throw new Error("Invalid answer sheet content");
   }
-  validateQuizContent(content);
+  validateAnswerSheetContent(content);
 
-  await new ContentsRepository(supabase).upsertQuiz(content);
+  await new ContentsRepository(supabase).upsertAnswerSheet(content);
 };
 
 const supabaseClient = createClient();
@@ -43,8 +43,8 @@ export const handleContentForm = async (result: ContentUpdateForm) => {
       case "content":
         await addContent(result as ContentUpdateForm, supabaseClient);
         break;
-      case "quiz":
-        await addQuiz(result as ContentUpdateForm, supabaseClient);
+      case "answer_sheet":
+        await addAnswerSheet(result as ContentUpdateForm, supabaseClient);
         break;
       default:
         throw new Error(`Unsupported content type: ${result.type}`);

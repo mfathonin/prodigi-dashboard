@@ -42,14 +42,14 @@ export class AnswerSheetRepository implements AnswerSheets {
     this.db = supabase;
   }
 
-  private createConfigArray = (
-    newValue: number | undefined,
-    oldValue: number[],
+  private createConfigArray = <T extends (number | number[])>(
+    newValue: T | undefined,
+    oldValue: T[],
     newCount: number,
     oldCount: number
-  ): number[] => {
+  ): T[] => {
     const baseValue = newValue ?? oldValue[0];
-    const newArray = Array(newCount).fill(baseValue);
+    const newArray = Array(newCount).fill(baseValue) as T[];
 
     // Copy existing values up to the new count
     if (!newValue) {
@@ -103,11 +103,12 @@ export class AnswerSheetRepository implements AnswerSheets {
 
     const newNOptions = this.createConfigArray(nOptions, oldNOptions, counts, oldCounts);
     const newPoints = this.createConfigArray(points, oldPoints, counts, oldCounts);
-    let newAnswers = this.createConfigArray(undefined, oldAnswers, counts, oldCounts);
+    let newAnswers = this.createConfigArray(undefined, oldAnswers as (number | number[])[], counts, oldCounts);
 
     // validate each answer is in range
     newAnswers = newAnswers.map((answer, index) => {
-      if (answer < 0 || answer >= newNOptions[index]) return 0;
+      if (!Array.isArray(answer) && (answer < 0 || answer >= newNOptions[index])) return 0;
+      if (Array.isArray(answer) && (answer.length >= newNOptions[index] || answer.length == 0)) return [0];
       return answer;
     });
 
@@ -148,9 +149,12 @@ export class AnswerSheetRepository implements AnswerSheets {
     );
 
     // validate answer is in range, reset to 0 if out of range
-    const updatedAnswers = [...existingData.answers];
-    if (existingData.answers[index] >= newNOptions[index])
+    const existingAnswers = existingData.answers as (number | number[])[];
+    const updatedAnswers = [...existingAnswers];
+    if (!Array.isArray(existingAnswers[index]) && existingAnswers[index] >= newNOptions[index])
       updatedAnswers[index] = 0;
+    if (Array.isArray(existingAnswers[index]) && existingAnswers[index].length > newNOptions[index])
+      updatedAnswers[index] = [0]; 
 
     const { error: updateError } = await this.db
       .from("answer_sheets")
