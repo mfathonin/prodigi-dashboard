@@ -62,11 +62,7 @@ export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
       <Input
         type="hidden"
         name="answer"
-        value={
-          !Array.isArray(answerState)
-            ? answerState
-            : answerState.map((e) => e.toString())
-        }
+        value={answerState.toString()}
         onChange={(e) => setAnswerState(parseInt(e.target.value))}
       />
 
@@ -76,6 +72,7 @@ export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
           type="multiple"
           value={answerState.map((e) => e.toString())}
           onValueChange={(value) => {
+            if (value.length === 0) return;
             setAnswerState(value.map((e) => parseInt(e)));
             onEdit(value.map((e) => parseInt(e)).toString());
           }}

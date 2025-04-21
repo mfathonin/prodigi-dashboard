@@ -25,7 +25,7 @@ const updateAnswerSheetSchema = z
   .object({
     answerSheetId: z.string(),
     counts: z.number(),
-    answers: z.array(z.number()),
+    answers: z.array(z.union([z.number(), z.array(z.number())])),
   })
   .refine((data) => data.answers.length === data.counts, {
     message: "Jumlah jawaban tidak sama dengan jumlah soal",
@@ -126,9 +126,16 @@ export const decreasePoints = async (formData: FormData) => {
 export const updateAnswerSheet = async (formData: FormData) => {
   const answerSheetId = formData.get("answerSheetId") as string;
   const counts = parseInt(formData.get("counts") as string);
-  const answers = formData
-    .getAll("answer")
-    .map((answer) => parseInt(answer as string));
+  const answersRaw = formData
+    .getAll("answers")
+    .map((answer) => JSON.parse(answer as string))[0];
+  const answerArray = formData.getAll("answer").map((answer, idx) => {
+    const isArrayForm = (answer as string).includes(",");
+    const parsed = isArrayForm ? (answer as string).split(",") : (answer as string);
+    return Array.isArray(parsed) ? parsed.map(e => parseInt(e)) : parseInt(answer as string);
+  });
+
+  const answers = answerArray.length > 0 ? answerArray : answersRaw as (number | number [])[];
 
   const { error } = updateAnswerSheetSchema.safeParse({
     answerSheetId,

@@ -103,7 +103,7 @@ export class AnswerSheetRepository implements AnswerSheets {
 
     const newNOptions = this.createConfigArray(nOptions, oldNOptions, counts, oldCounts);
     const newPoints = this.createConfigArray(points, oldPoints, counts, oldCounts);
-    let newAnswers = this.createConfigArray(undefined, oldAnswers as (number | number[])[], counts, oldCounts);
+    let newAnswers = this.createConfigArray(0, oldAnswers as (number | number[])[], counts, oldCounts);
 
     // validate each answer is in range
     newAnswers = newAnswers.map((answer, index) => {
@@ -190,16 +190,17 @@ export class AnswerSheetRepository implements AnswerSheets {
       throw { message: "Gagal mengupdate data", error: updateError };
   };
 
-  updateAnswers = async (answerSheetId: string, answers: number[]) => {
+  updateAnswers = async (answerSheetId: string, answers: (number | number[])[]) => {
     const existingData = await this.getAnswerSheetById(answerSheetId);
     if (!existingData) throw { message: "AnswerSheet not found" };
 
     if (answers.length !== existingData.counts)
       throw { message: "Invalid answers array length" };
 
+    // FIXME: validate array that has length > n_options
     if (
       !answers.every(
-        (answer, index) => answer >= 0 && answer < existingData.n_options[index]
+        (answer, index) => (Array.isArray(answer) && answer.length > 0) || (!Array.isArray(answer) && answer >= 0 && answer < existingData.n_options[index])
       )
     )
       throw { message: "Invalid answer values" };
