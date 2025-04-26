@@ -58,11 +58,18 @@ export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
 
   return (
     <div className="flex-1 border-b last:border-b-0 border-gray-200 dark:border-gray-800 pb-3 mb-3">
-      <Label className="pt-4">No. {index + 1}</Label>
+      <div className="flex justify-between items-end">
+        <Label className="h-5 flex items-center">No. {index + 1}</Label>
+        {Array.isArray(answer) && (
+          <p className="px-1.5 h-5 flex items-center rounded-lg text-white text-xs bg-green-400/70 dark:bg-green-800/50 ">
+            <i className="bx bx-info-circle me-1" /> Pilih lebih dari satu
+          </p>
+        )}
+      </div>
       <Input
         type="hidden"
         name="answer"
-        value={answerState.toString()}
+        value={answerState.toString() + (Array.isArray(answer) ? "," : "")}
         onChange={(e) => setAnswerState(parseInt(e.target.value))}
       />
 

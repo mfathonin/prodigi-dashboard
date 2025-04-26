@@ -126,16 +126,24 @@ export const decreasePoints = async (formData: FormData) => {
 export const updateAnswerSheet = async (formData: FormData) => {
   const answerSheetId = formData.get("answerSheetId") as string;
   const counts = parseInt(formData.get("counts") as string);
+
   const answersRaw = formData
     .getAll("answers")
     .map((answer) => JSON.parse(answer as string))[0];
-  const answerArray = formData.getAll("answer").map((answer, idx) => {
+  const answerArray = formData.getAll("answer").map((answer) => {
     const isArrayForm = (answer as string).includes(",");
-    const parsed = isArrayForm ? (answer as string).split(",") : (answer as string);
-    return Array.isArray(parsed) ? parsed.map(e => parseInt(e)) : parseInt(answer as string);
+    const parsed = isArrayForm
+      ? (answer as string).split(",")
+      : (answer as string);
+    return Array.isArray(parsed)
+      ? parsed.map((e) => parseInt(e)).filter((e) => !Number.isNaN(e))
+      : parseInt(answer as string);
   });
 
-  const answers = answerArray.length > 0 ? answerArray : answersRaw as (number | number [])[];
+  const answers =
+    answerArray.length > 0
+      ? answerArray
+      : (answersRaw as (number | number[])[]);
 
   const { error } = updateAnswerSheetSchema.safeParse({
     answerSheetId,
