@@ -42,7 +42,7 @@ export class AnswerSheetRepository implements AnswerSheets {
     this.db = supabase;
   }
 
-  private createConfigArray = <T extends (number | number[])>(
+  private createConfigArray = <T extends number | number[]>(
     newValue: T | undefined,
     oldValue: T[],
     newCount: number,
@@ -109,6 +109,7 @@ export class AnswerSheetRepository implements AnswerSheets {
     newAnswers = newAnswers.map((answer, index) => {
       if (!Array.isArray(answer) && (answer < 0 || answer >= newNOptions[index])) return 0;
       if (Array.isArray(answer) && (answer.length >= newNOptions[index] || answer.length == 0)) return [0];
+      if (Array.isArray(answer)) answer = answer.filter((answer) => answer < newNOptions[index]);
       return answer;
     });
 
@@ -151,10 +152,19 @@ export class AnswerSheetRepository implements AnswerSheets {
     // validate answer is in range, reset to 0 if out of range
     const existingAnswers = existingData.answers as (number | number[])[];
     const updatedAnswers = [...existingAnswers];
-    if (!Array.isArray(existingAnswers[index]) && existingAnswers[index] >= newNOptions[index])
+    if (
+      !Array.isArray(existingAnswers[index]) &&
+      existingAnswers[index] >= newNOptions[index]
+    )
       updatedAnswers[index] = 0;
-    if (Array.isArray(existingAnswers[index]) && existingAnswers[index].length > newNOptions[index])
-      updatedAnswers[index] = [0]; 
+    if (Array.isArray(existingAnswers[index])) {
+      if (existingAnswers[index].length >= newNOptions[index])
+        updatedAnswers[index] = [0];
+
+      updatedAnswers[index] = existingAnswers[index].filter(
+        (answer) => answer < newNOptions[index]
+      );
+    }
 
     const { error: updateError } = await this.db
       .from("answer_sheets")
@@ -190,14 +200,16 @@ export class AnswerSheetRepository implements AnswerSheets {
       throw { message: "Gagal mengupdate data", error: updateError };
   };
 
-  updateAnswers = async (answerSheetId: string, answers: (number | number[])[]) => {
+  updateAnswers = async (
+    answerSheetId: string,
+    answers: (number | number[])[]
+  ) => {
     const existingData = await this.getAnswerSheetById(answerSheetId);
     if (!existingData) throw { message: "AnswerSheet not found" };
 
     if (answers.length !== existingData.counts)
       throw { message: "Invalid answers array length" };
 
-    // FIXME: validate array that has length > n_options
     if (
       !answers.every(
         (answer, index) => (Array.isArray(answer) && answer.length > 0) || (!Array.isArray(answer) && answer >= 0 && answer < existingData.n_options[index])
