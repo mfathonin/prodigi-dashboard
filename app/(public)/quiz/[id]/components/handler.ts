@@ -127,23 +127,40 @@ export const updateAnswerSheet = async (formData: FormData) => {
   const answerSheetId = formData.get("answerSheetId") as string;
   const counts = parseInt(formData.get("counts") as string);
 
-  const answersRaw = formData
-    .getAll("answers")
-    .map((answer) => JSON.parse(answer as string))[0];
-  const answerArray = formData.getAll("answer").map((answer) => {
-    const isArrayForm = (answer as string).includes(",");
-    const parsed = isArrayForm
-      ? (answer as string).split(",")
-      : (answer as string);
-    return Array.isArray(parsed)
-      ? parsed.map((e) => parseInt(e)).filter((e) => !Number.isNaN(e))
-      : parseInt(answer as string);
-  });
+  let answers: (number | number[])[] = [];
 
-  const answers =
-    answerArray.length > 0
-      ? answerArray
-      : (answersRaw as (number | number[])[]);
+  try {
+    // First try to parse from the "answers" JSON field
+    const answersJson = formData.get("answers");
+    if (answersJson) {
+      const parsed = JSON.parse(answersJson as string);
+      if (Array.isArray(parsed)) {
+        answers = parsed;
+      }
+    }
+
+    // If no answers from JSON, try individual answer fields
+    if (answers.length === 0) {
+      answers = formData.getAll("answer").map((answerStr) => {
+        if (typeof answerStr !== "string") return 0;
+
+        if (answerStr.includes(",")) {
+          // Handle multi-answer case
+          return answerStr
+            .split(",")
+            .map((num) => parseInt(num.trim()))
+            .filter((num) => !isNaN(num));
+        } else {
+          // Handle single answer case
+          const num = parseInt(answerStr);
+          return isNaN(num) ? 0 : num;
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error parsing answers:", error);
+    throw { message: "Failed to parse answers", error };
+  }
 
   const { error } = updateAnswerSheetSchema.safeParse({
     answerSheetId,

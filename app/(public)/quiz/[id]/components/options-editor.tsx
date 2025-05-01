@@ -70,7 +70,6 @@ export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
         type="hidden"
         name="answer"
         value={answerState.toString() + (Array.isArray(answer) ? "," : "")}
-        onChange={(e) => setAnswerState(parseInt(e.target.value))}
       />
 
       {Array.isArray(answerState) ? (

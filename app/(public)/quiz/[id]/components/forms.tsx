@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useState } from "react";
+import { useId, useOptimistic, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
@@ -307,11 +307,12 @@ export const MultiAnswerForm = ({
 
 const ToggleMultiAnswer = ({ state }: { state: boolean }) => {
   const { pending } = useFormStatus();
+  const uid = useId();
 
   return (
     <div className="h-8 flex justify-start items-center gap-x-1">
       <Switch
-        id="multi-answer"
+        id={`multi-answer-${uid}`}
         type="submit"
         disabled={pending}
         checked={state}
