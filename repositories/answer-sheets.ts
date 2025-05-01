@@ -25,7 +25,10 @@ interface AnswerSheets {
     index: number,
     type: "increase" | "decrease"
   ) => Promise<void>;
-  updateAnswers: (answerSheetId: string, answers: number[]) => Promise<void>;
+  updateAnswers: (
+    answerSheetId: string,
+    answers: (number | number[])[]
+  ) => Promise<void>;
   recreateAnswerSheet: (
     answerSheetId: string,
     bookId: string,
@@ -42,14 +45,39 @@ export class AnswerSheetRepository implements AnswerSheets {
     this.db = supabase;
   }
 
-  private createConfigArray = (
-    newValue: number | undefined,
-    oldValue: number[],
+  /**
+   * Validates an answer against the number of options
+   * @param answer The answer to validate (single number or array of numbers)
+   * @param nOptions The number of options available for this question
+   * @returns The validated answer (corrected if needed)
+   */
+  private validateAnswer = (
+    answer: number | number[],
+    nOptions: number
+  ): number | number[] => {
+    // For single answer
+    if (!Array.isArray(answer)) {
+      return answer >= 0 && answer < nOptions ? answer : 0;
+    }
+
+    // For array answers
+    // Filter valid options and ensure uniqueness
+    const validOptions = [...new Set(answer)].filter(
+      (opt) => opt >= 0 && opt < nOptions
+    );
+
+    // Return [0] if no valid options or empty array
+    return validOptions.length > 0 ? validOptions : [0];
+  };
+
+  private createConfigArray = <T extends number | number[]>(
+    newValue: T | undefined,
+    oldValue: T[],
     newCount: number,
     oldCount: number
-  ): number[] => {
+  ): T[] => {
     const baseValue = newValue ?? oldValue[0];
-    const newArray = Array(newCount).fill(baseValue);
+    const newArray = Array(newCount).fill(baseValue) as T[];
 
     // Copy existing values up to the new count
     if (!newValue) {
@@ -101,15 +129,29 @@ export class AnswerSheetRepository implements AnswerSheets {
       answers: oldAnswers,
     } = existingData;
 
-    const newNOptions = this.createConfigArray(nOptions, oldNOptions, counts, oldCounts);
-    const newPoints = this.createConfigArray(points, oldPoints, counts, oldCounts);
-    let newAnswers = this.createConfigArray(undefined, oldAnswers, counts, oldCounts);
+    const newNOptions = this.createConfigArray(
+      nOptions,
+      oldNOptions,
+      counts,
+      oldCounts
+    );
+    const newPoints = this.createConfigArray(
+      points,
+      oldPoints,
+      counts,
+      oldCounts
+    );
+    let newAnswers = this.createConfigArray(
+      0,
+      oldAnswers as (number | number[])[],
+      counts,
+      oldCounts
+    );
 
-    // validate each answer is in range
-    newAnswers = newAnswers.map((answer, index) => {
-      if (answer < 0 || answer >= newNOptions[index]) return 0;
-      return answer;
-    });
+    // Validate each answer using the validator function
+    newAnswers = newAnswers.map((answer, index) =>
+      this.validateAnswer(answer, newNOptions[index])
+    );
 
     // update answer_sheets
     const { error: updateError } = await this.db
@@ -147,10 +189,13 @@ export class AnswerSheetRepository implements AnswerSheets {
       Math.min(MAX_OPTIONS, newNOptions[index])
     );
 
-    // validate answer is in range, reset to 0 if out of range
-    const updatedAnswers = [...existingData.answers];
-    if (existingData.answers[index] >= newNOptions[index])
-      updatedAnswers[index] = 0;
+    // Validate answer is in range using the validator function
+    const existingAnswers = existingData.answers as (number | number[])[];
+    const updatedAnswers = [...existingAnswers];
+    updatedAnswers[index] = this.validateAnswer(
+      existingAnswers[index],
+      newNOptions[index]
+    );
 
     const { error: updateError } = await this.db
       .from("answer_sheets")
@@ -186,19 +231,46 @@ export class AnswerSheetRepository implements AnswerSheets {
       throw { message: "Gagal mengupdate data", error: updateError };
   };
 
-  updateAnswers = async (answerSheetId: string, answers: number[]) => {
+  updateAnswers = async (
+    answerSheetId: string,
+    answers: (number | number[])[]
+  ) => {
     const existingData = await this.getAnswerSheetById(answerSheetId);
     if (!existingData) throw { message: "AnswerSheet not found" };
 
     if (answers.length !== existingData.counts)
       throw { message: "Invalid answers array length" };
 
-    if (
-      !answers.every(
-        (answer, index) => answer >= 0 && answer < existingData.n_options[index]
-      )
-    )
+    // Validate all answers using the validator function
+    const validatedAnswers = answers.map((answer, index) =>
+      this.validateAnswer(answer, existingData.n_options[index])
+    );
+
+    // Check if any answer was invalid and needed correction
+    const hasInvalidAnswers = validatedAnswers.some((validAnswer, index) => {
+      const originalAnswer = answers[index];
+
+      // For single answers
+      if (!Array.isArray(originalAnswer) && !Array.isArray(validAnswer)) {
+        return originalAnswer !== validAnswer;
+      }
+
+      // For array answers
+      if (Array.isArray(originalAnswer) && Array.isArray(validAnswer)) {
+        // Check if arrays have different lengths or different content
+        return (
+          originalAnswer.length !== validAnswer.length ||
+          !originalAnswer.every((val) => validAnswer.includes(val))
+        );
+      }
+
+      // Type mismatch (shouldn't happen in normal operation)
+      return true;
+    });
+
+    if (hasInvalidAnswers) {
       throw { message: "Invalid answer values" };
+    }
 
     const { error } = await this.db
       .from("answer_sheets")

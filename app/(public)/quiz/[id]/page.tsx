@@ -56,8 +56,8 @@ export default async function QuizPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <div className="flex w-full">
-        <div className="hidden md:flex max-w-64 flex-col flex-1 justify-between pb-1 border-transparent">
+      <div className="flex w-full justify-between">
+        <div className="hidden md:flex max-w-xl flex-col flex-grow justify-between pb-1 border-transparent">
           {questions.map((_, index) => (
             <QuestionConfig
               key={index}

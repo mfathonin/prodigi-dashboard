@@ -25,7 +25,7 @@ const updateAnswerSheetSchema = z
   .object({
     answerSheetId: z.string(),
     counts: z.number(),
-    answers: z.array(z.number()),
+    answers: z.array(z.union([z.number(), z.array(z.number())])),
   })
   .refine((data) => data.answers.length === data.counts, {
     message: "Jumlah jawaban tidak sama dengan jumlah soal",
@@ -126,9 +126,41 @@ export const decreasePoints = async (formData: FormData) => {
 export const updateAnswerSheet = async (formData: FormData) => {
   const answerSheetId = formData.get("answerSheetId") as string;
   const counts = parseInt(formData.get("counts") as string);
-  const answers = formData
-    .getAll("answer")
-    .map((answer) => parseInt(answer as string));
+
+  let answers: (number | number[])[] = [];
+
+  try {
+    // First try to parse from the "answers" JSON field
+    const answersJson = formData.get("answers");
+    if (answersJson) {
+      const parsed = JSON.parse(answersJson as string);
+      if (Array.isArray(parsed)) {
+        answers = parsed;
+      }
+    }
+
+    // If no answers from JSON, try individual answer fields
+    if (answers.length === 0) {
+      answers = formData.getAll("answer").map((answerStr) => {
+        if (typeof answerStr !== "string") return 0;
+
+        if (answerStr.includes(",")) {
+          // Handle multi-answer case
+          return answerStr
+            .split(",")
+            .map((num) => parseInt(num.trim()))
+            .filter((num) => !isNaN(num));
+        } else {
+          // Handle single answer case
+          const num = parseInt(answerStr);
+          return isNaN(num) ? 0 : num;
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error parsing answers:", error);
+    throw { message: "Failed to parse answers", error };
+  }
 
   const { error } = updateAnswerSheetSchema.safeParse({
     answerSheetId,
@@ -169,7 +201,7 @@ export const recreateAnswerSheet = async (formData: FormData) => {
   revalidatePath(`/quiz/${answerSheetId}`);
 
   // ensure content type is correct
-  await contentRepo.ensureQuizContentType(answerSheetId);
+  await contentRepo.ensureAnswerSheetContentType(answerSheetId);
 
   revalidatePath(`/${bookId}`);
 };

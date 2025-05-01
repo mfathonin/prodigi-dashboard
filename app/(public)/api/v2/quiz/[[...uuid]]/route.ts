@@ -20,14 +20,23 @@ const {
   },
 } = constants;
 
-const inputSchema = z.object({
-  answers: z.array(z.number()).min(1),
+const submissionSchema = z.object({
+  answers: z.array(z.union([z.number(), z.array(z.number())])).min(1),
   name: z.string().min(1),
   className: z.string().min(1),
   numberId: z.string().min(1),
   schoolName: z.string().min(1),
 });
 
+/**
+ * API handler for quiz submission evaluation.
+ *
+ * This handler processes quiz submissions, evaluates them, and returns the result.
+ *
+ * @param request - submission data
+ * @param params - params to load answer sheet Id
+ * @returns
+ */
 export async function POST(
   request: Request,
   { params }: { params: { uuid: string[] } }
@@ -48,14 +57,20 @@ export async function POST(
     }
 
     // Validate required fields
-    const { data: body, success } = inputSchema.safeParse(rawBody);
+    const { data: body, success } = submissionSchema.safeParse(rawBody);
     if (!success) {
       return ApiResponseHandler.error(QUIZ_MISSING_FIELDS);
     }
 
     const { answers, ...profile } = body;
 
-    if (!answers.every((answer) => typeof answer === "number")) {
+    if (
+      !answers.every(
+        (answer) =>
+          typeof answer === "number" ||
+          (Array.isArray(answer) && answer.every((a) => typeof a === "number"))
+      )
+    ) {
       return ApiResponseHandler.error(QUIZ_ANSWERS_NOT_ARRAY);
     }
 
@@ -76,14 +91,33 @@ export async function POST(
 
     const { totalPoints, correctAnswers } = answers.reduce(
       (acc, submittedAnswer, index) => {
-        if (index < answerKey.length && submittedAnswer === answerKey[index]) {
-          acc.totalPoints += answerSheet.points[index];
-          acc.correctAnswers++;
+        const keys = answerKey as (number | number[])[];
+        if (index < keys.length) {
+          if (!Array.isArray(keys[index]) && submittedAnswer === keys[index]) {
+            acc.totalPoints += answerSheet.points[index];
+            acc.correctAnswers++;
+          } else if (
+            Array.isArray(keys[index]) &&
+            Array.isArray(submittedAnswer)
+          ) {
+            const keySet = new Set(keys[index] as number[]);
+            const submittedSet = new Set(submittedAnswer);
+            const isCorrect =
+              keySet.size === submittedSet.size &&
+              [...keySet].every((a) => submittedSet.has(a));
+
+            if (isCorrect) {
+              acc.totalPoints += answerSheet.points[index];
+              acc.correctAnswers++;
+            }
+          }
         }
         return acc;
       },
       { totalPoints: 0, correctAnswers: 0 }
     );
+
+    const fullPoints = answerSheet.points.reduce((p, sum) => sum + p, 0);
 
     // Calculate percentage
     const percentage = (correctAnswers / totalQuestions) * 100;
@@ -91,6 +125,7 @@ export async function POST(
     const result = {
       profile,
       totalPoints,
+      fullPoints,
       percentage,
       totalQuestions,
       correctAnswers,

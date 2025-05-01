@@ -67,7 +67,7 @@ export const ContentCard = ({
       linkId: link.id,
       id: content.id,
       uuid: content.uuid,
-      type: content.type,
+      type: content.type ?? "content",
     };
 
     dialog?.openDialog("alert", _content, async (result) => {
@@ -92,7 +92,7 @@ export const ContentCard = ({
       linkId: link.id,
       id: content.id,
       uuid: content.uuid,
-      type: content.type,
+      type: content.type ?? "content",
     };
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
@@ -113,7 +113,8 @@ export const ContentCard = ({
 
   const handleContentClick = () => {
     switch (content.type) {
-      case "quiz":
+      case "answer_sheet":
+      case "exercise":
         if (link.targetUrl) {
           const targetUrl = new URL(link.targetUrl);
           window.open(targetUrl.pathname, "_blank");
@@ -137,7 +138,7 @@ export const ContentCard = ({
         <div className="flex flex-col w-full md:flex-row gap-x-10 gap-y-3">
           <div className="flex flex-col flex-1 gap-y-2">
             <div className="flex items-center gap-x-2">
-              <Badge variant={content.type}>{LABEL[content.type]}</Badge>
+              <Badge variant={content.type}>{LABEL[content.type ?? 'content']}</Badge>
               <p className="text-sm">{content.title}</p>
             </div>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 line-clamp-1">

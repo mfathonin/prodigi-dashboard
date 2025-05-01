@@ -6,7 +6,7 @@ import { ContentsRepository } from "@/repositories/contents";
 const urlValidation: { pattern: RegExp; message: string } =
   constants.validation.url;
 
-export type ContentType = "quiz" | "content";
+export type ContentType = "exercise" | "content" | "answer_sheet";
 
 export const contentSchema = z
   .object({
@@ -18,7 +18,7 @@ export const contentSchema = z
     uuid: z.string().optional(),
     linkId: z.number().optional(),
     id: z.number().optional(),
-    type: z.enum(["quiz", "content"]),
+    type: z.enum(["exercise", "content", "answer_sheet"]),
     title: z.string().min(1, "Judul tidak boleh kosong"),
 
     nQuestion: z.number().min(1, "Jumlah soal tidak boleh kosong").optional(),
@@ -30,11 +30,11 @@ export const contentSchema = z
 
     targetUrl: z.string().optional(),
   })
-  .refine((data) => (data.type === "quiz" ? data.nQuestion : true), {
+  .refine((data) => (data.type !== "content" ? data.nQuestion : true), {
     path: ["nQuestion"],
     message: "Jumlah soal tidak valid",
   })
-  .refine((data) => (data.type === "quiz" ? data.nOptions : true), {
+  .refine((data) => (data.type !== "content" ? data.nOptions : true), {
     path: ["nOptions"],
     message: "Jumlah opsi tidak valid",
   })
@@ -98,21 +98,21 @@ export function validateExternalContent(
   return true;
 }
 
-export function isQuizContent(
+export function isAnswerSheetContent(
   content: ContentUpdateForm
 ): content is QuizUpdateForm {
   return (
-    content.type === "quiz" &&
+    content.type === "answer_sheet" &&
     typeof content.nQuestion === "number" &&
     typeof content.nOptions === "number"
   );
 }
 
-export function validateQuizContent(
+export function validateAnswerSheetContent(
   content: ContentUpdateForm
 ): content is QuizUpdateForm {
   return (
-    isQuizContent(content) && content.nQuestion > 0 && content.nOptions > 0
+    isAnswerSheetContent(content) && content.nQuestion > 0 && content.nOptions > 0
   );
 }
 

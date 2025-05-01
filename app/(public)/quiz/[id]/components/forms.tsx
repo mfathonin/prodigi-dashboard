@@ -1,12 +1,14 @@
 "use client";
 
-import { useOptimistic, useState } from "react";
+import { useId, useOptimistic, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { AnswerSheet } from "@/models";
 
@@ -146,8 +148,8 @@ export const OptionsForm = ({
     };
 
   return (
-    <div className="flex items-center gap-4">
-      <Label className="text-xs">Jumlah Opsi</Label>
+    <div className="flex flex-col items-start gap-y-2 w-32">
+      <Label className="text-xs font-light opacity-60 px-2">Jumlah Opsi</Label>
       <div className="flex items-center gap-2">
         <form action={handleFormAction("decrease")}>
           <input type="hidden" name="answerSheetId" value={answerSheetId} />
@@ -218,8 +220,8 @@ export const PointsForm = ({
       }
     };
   return (
-    <div className="flex items-center gap-4">
-      <Label className="text-xs">Points</Label>
+    <div className="flex flex-col items-start gap-y-2 w-32">
+      <Label className="text-xs font-light opacity-60 px-2">Points</Label>
       <div className="flex items-center gap-2">
         <form action={handleFormAction("decrease")}>
           <input type="hidden" name="answerSheetId" value={answerSheetId} />
@@ -251,6 +253,75 @@ export const PointsForm = ({
           />
         </form>
       </div>
+    </div>
+  );
+};
+
+export const MultiAnswerForm = ({
+  answerSheetId,
+  index,
+  answers: currentAnswers,
+}: {
+  answerSheetId: string;
+  index: number;
+  answers: (number | number[])[];
+}) => {
+  const [isCheckedOptimistic, setIsCheckedOptimistic] = useOptimistic<
+    boolean,
+    boolean
+  >(Array.isArray(currentAnswers[index]), (_, value: boolean) => value);
+
+  const handleToggleMultiAnswer = async (formData: FormData) => {
+    try {
+      setIsCheckedOptimistic(!isCheckedOptimistic);
+      const newAnswer = Array.isArray(currentAnswers[index])
+        ? 0
+        : [currentAnswers[index]];
+      const newAnswersArray = [
+        ...currentAnswers.slice(0, index),
+        newAnswer,
+        ...currentAnswers.slice(index + 1),
+      ];
+      formData.set("answers", JSON.stringify(newAnswersArray));
+
+      await updateAnswerSheet(formData);
+    } catch (error) {
+      toast.error("Terjadi kesalahan", {
+        description: `[multi-answer.${index}]: ${(error as Error).message}`,
+      });
+      setIsCheckedOptimistic(!isCheckedOptimistic);
+    }
+  };
+
+  return (
+    <form action={handleToggleMultiAnswer}>
+      <input type="hidden" name="answerSheetId" value={answerSheetId} />
+      <input type="hidden" name="counts" value={currentAnswers.length} />
+      <div className="flex flex-1 flex-col gap-y-2">
+        <p className="font-light opacity-60 text-xs">Multi Jawaban</p>
+        <ToggleMultiAnswer state={isCheckedOptimistic} />
+      </div>
+    </form>
+  );
+};
+
+const ToggleMultiAnswer = ({ state }: { state: boolean }) => {
+  const { pending } = useFormStatus();
+  const uid = useId();
+
+  return (
+    <div className="h-8 flex justify-start items-center gap-x-1">
+      <Switch
+        id={`multi-answer-${uid}`}
+        type="submit"
+        disabled={pending}
+        checked={state}
+      />
+      {pending && (
+        <div className="size-6">
+          <Spinner className="mx-2 !text-lg" />
+        </div>
+      )}
     </div>
   );
 };
@@ -306,7 +377,7 @@ export const AnswerConfigForm = ({
     id: answerSheetId,
     nOptions: data.n_options[index] ?? 0,
     points: data.points[index] ?? 0,
-    answer: data.answers[index] ?? 0,
+    answer: (data.answers as (number | number[])[])[index] ?? 0,
   });
 
   return (

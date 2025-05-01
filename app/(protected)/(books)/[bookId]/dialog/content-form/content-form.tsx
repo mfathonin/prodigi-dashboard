@@ -107,8 +107,8 @@ export const ContentForm = ({
                     <TabsTrigger className="w-full" value="content">
                       Link
                     </TabsTrigger>
-                    <TabsTrigger className="w-full" value="quiz">
-                      Kuis
+                    <TabsTrigger className="w-full" value="answer_sheet">
+                      Lembar Jawab
                     </TabsTrigger>
                   </TabsList>
                 )}
@@ -150,7 +150,7 @@ export const ContentForm = ({
                   />
                   <div className="h-[68px] w-full"></div>
                 </TabsContent>
-                <TabsContent value="quiz" className="flex flex-col m-0 gap-y-3">
+                <TabsContent value="answer_sheet" className="flex flex-col m-0 gap-y-3">
                   <div className="flex gap-x-3 w-full">
                     <FormField
                       control={form.control}
@@ -211,7 +211,7 @@ export const ContentForm = ({
                 {!isEditing && (
                   <TabsList className="hidden md:block">
                     <TabsTrigger value="content">Link</TabsTrigger>
-                    <TabsTrigger value="quiz">Kuis</TabsTrigger>
+                    <TabsTrigger value="answer_sheet">Lembar Jawab</TabsTrigger>
                   </TabsList>
                 )}
                 <div className="w-full flex flex-col gap-4 items-center justify-start">
