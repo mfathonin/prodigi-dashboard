@@ -173,13 +173,11 @@ export async function GET(
       });
 
     // Adding answers type mode to answerSheets object
-    const answersTypeMode = (answers as (number | number[])[]).map((answer) =>
+    const modes = (answers as (number | number[])[]).map((answer) =>
       // 0: single choice, 1: multiple choice
       Array.isArray(answer) ? 1 : 0
     );
-    Object.assign(answerSheets, {
-      mode: answersTypeMode,
-    });
+    Object.assign(answerSheets, { modes });
 
     return ApiResponseHandler.success(answerSheets);
   } catch (error: unknown) {
