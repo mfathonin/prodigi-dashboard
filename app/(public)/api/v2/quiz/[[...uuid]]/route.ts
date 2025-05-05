@@ -172,6 +172,13 @@ export async function GET(
         contentTitle: contentPromise.value?.title,
       });
 
+    // Adding answers type mode to answerSheets object
+    const modes = (answers as (number | number[])[]).map((answer) =>
+      // 0: single choice, 1: multiple choice
+      Array.isArray(answer) ? 1 : 0
+    );
+    Object.assign(answerSheets, { modes });
+
     return ApiResponseHandler.success(answerSheets);
   } catch (error: unknown) {
     console.error(1349, `get.quiz.${id}`, error);
