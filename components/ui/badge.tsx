@@ -14,7 +14,8 @@ const badgeVariants = cva(
           "border-transparent bg-slate-100 text-slate-900 hover:bg-slate-100/80 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-800/80",
         destructive:
           "border-transparent bg-red-500 text-slate-50 shadow hover:bg-red-500/80 dark:bg-red-900 dark:text-slate-50 dark:hover:bg-red-900/80",
-        quiz: "border-transparent bg-emerald-400 text-slate-50 shadow hover:bg-emerald-400/80 dark:bg-emerald-800 dark:text-slate-50 dark:hover:bg-emerald-800/80",
+        exercise: "border-transparent bg-amber-400 text-slate-50 shadow hover:bg-amber-400/80 dark:bg-amber-800 dark:text-slate-50 dark:hover:bg-amber-800/80",
+        answer_sheet: "border-transparent bg-emerald-400 text-slate-50 shadow hover:bg-emerald-400/80 dark:bg-emerald-800 dark:text-slate-50 dark:hover:bg-emerald-800/80",
         content:
           "border-transparent bg-sky-500 text-slate-50 shadow hover:bg-sky-500/80 dark:bg-sky-900 dark:text-slate-50 dark:hover:bg-sky-900/80",
         outline: "text-slate-950 dark:text-slate-50",
