@@ -69,7 +69,11 @@ export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
       <Input
         type="hidden"
         name="answer"
-        value={answerState.toString() + (Array.isArray(answer) ? "," : "")}
+        value={
+          Array.isArray(answerState)
+            ? answerState.join(",")
+            : answerState.toString()
+        }
       />
 
       {Array.isArray(answerState) ? (
@@ -94,6 +98,11 @@ export const OptionsEditor = ({ data, index, onEdit }: OptionsEditorProps) => {
           type="single"
           value={answerState.toString()}
           onValueChange={(value) => {
+            if (value === "") return;
+
+            const numeric = parseInt(value, 10);
+            if (Number.isNaN(numeric)) return;
+
             setAnswerState(parseInt(value));
             onEdit(value);
           }}

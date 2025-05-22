@@ -77,7 +77,9 @@ export class AnswerSheetRepository implements AnswerSheets {
     oldCount: number
   ): T[] => {
     const baseValue = newValue ?? oldValue[0];
-    const newArray = Array(newCount).fill(baseValue) as T[];
+    const newArray = Array.from({ length: newCount }, () =>
+      Array.isArray(baseValue) ? [...baseValue] : (baseValue as number)
+    ) as T[];
 
     // Copy existing values up to the new count
     if (!newValue) {

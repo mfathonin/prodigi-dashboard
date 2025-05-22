@@ -148,8 +148,11 @@ export const updateAnswerSheet = async (formData: FormData) => {
           // Handle multi-answer case
           return answerStr
             .split(",")
-            .map((num) => parseInt(num.trim()))
-            .filter((num) => !isNaN(num));
+            .map((s) => {
+              const n = Number.parseInt(s.trim(), 10);
+              return Number.isNaN(n) ? null : n;
+            })
+            .filter((n): n is number => n !== null);
         } else {
           // Handle single answer case
           const num = parseInt(answerStr);

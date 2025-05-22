@@ -3,7 +3,7 @@ ALTER TABLE "public"."contents"
   ALTER COLUMN "type" drop default;
 
 ALTER TABLE "public"."contents"
-  ALTER COLUMN TYPE type TEXT;
+  ALTER COLUMN "type" TYPE TEXT;
 
 UPDATE public.contents
 SET type = NULL
