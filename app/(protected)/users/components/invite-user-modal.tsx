@@ -24,6 +24,7 @@ export function InviteUserModal({
   onClose,
   onSuccess,
 }: InviteUserModalProps) {
+  const isNonProduction = process.env.NODE_ENV !== "production";
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export function InviteUserModal({
               required
             />
           </div>
-          {inviteLink && (
+          {isNonProduction && inviteLink && (
             <div className="text-xs break-all">
               <p className="mb-1">Dev invite link:</p>
               <a className="underline" href={inviteLink}>
