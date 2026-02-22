@@ -1,10 +1,10 @@
 import {
   ContentUpdateForm,
-  Database,
   ExternalContentUpdateForm,
   QuizUpdateForm,
   Tables,
 } from "@/models";
+import { execute, query, queryOne } from "@/lib/db/utils";
 
 type BookContentsLink = Tables<"contents"> & {
   link: {
@@ -31,179 +31,190 @@ export class ContentsRepository implements Contents {
     this._db = db;
   }
 
-  async getBookContents(bookId: string) {
-    const response = await this._db
-      .from("contents")
-      .select(
-        `
-      *,
-      link (id, path, targetUrl: target_url)
-    `
-      )
-      .eq("book_id", bookId)
-      .order("title", { ascending: true });
-    if (response.error) throw response.error;
+  private async getLinkById(linkUuid: string) {
+    return queryOne<{ id: number; uuid: string; path: string; target_url: string }>(
+      `select id, uuid, path, target_url from link where uuid = ?`,
+      [linkUuid]
+    );
+  }
 
-    const contents = response.data;
-    return contents;
+  async getBookContents(bookId: string) {
+    const rows = await query<any>(
+      `select c.*, l.id as link_num_id, l.path as link_path, l.target_url as link_target_url
+       from contents c
+       left join link l on l.uuid = c.link_id
+       where c.book_id = ?
+       order by c.title asc`,
+      [bookId]
+    );
+
+    return rows.map((r) => ({
+      ...r,
+      link: r.link_path
+        ? {
+            id: Number(r.link_num_id),
+            path: r.link_path,
+            targetUrl: r.link_target_url,
+          }
+        : null,
+    }));
   }
 
   async upsertContentLink(
     _content: ExternalContentUpdateForm
   ): Promise<BookContentsLink> {
     const { path, targetUrl, linkId, ...content } = _content;
-    const link = {
-      path,
-      target_url: targetUrl,
-      id: linkId !== -1 ? linkId : undefined,
-    };
-    let updatedLink: BookContentsLink["link"] & { uuid: string };
-    const updateLinkResponse = await this._db
-      .from("link")
-      .upsert(link)
-      .select(`id, path, targetUrl: target_url, uuid`)
-      .single();
-    if (updateLinkResponse.error) throw updateLinkResponse;
-    updatedLink = updateLinkResponse.data;
 
-    const contentWithLink = {
-      title: content.title,
-      id: content.id !== -1 ? content.id : undefined,
-      uuid: content.uuid !== "" ? content.uuid : undefined,
-      link_id: updatedLink?.uuid,
-      book_id: content.bookId,
-    };
-    if (content.uuid === "")
-      Object.assign(contentWithLink, { type: content.type });
+    let linkUuid: string;
+    if (linkId && linkId !== -1) {
+      const existingLink = await queryOne<{ uuid: string }>(
+        `select uuid from link where id = ?`,
+        [linkId]
+      );
+      if (!existingLink) throw new Error("Link not found");
+      linkUuid = existingLink.uuid;
+      await execute(`update link set path = ?, target_url = ? where uuid = ?`, [
+        path,
+        targetUrl,
+        linkUuid,
+      ]);
+    } else {
+      linkUuid = crypto.randomUUID();
+      await execute(`insert into link (uuid, path, target_url) values (?, ?, ?)`, [
+        linkUuid,
+        path,
+        targetUrl,
+      ]);
+    }
 
-    const response = await this._db
-      .from("contents")
-      .upsert(contentWithLink)
-      .select(
-        `
-          *,
-          link (id, path, targetUrl: target_url)
-        `
-      )
-      .single();
-    if (response.error) throw response.error;
+    const contentUuid = content.uuid && content.uuid !== "" ? content.uuid : crypto.randomUUID();
+    const now = new Date().toISOString();
+    const existingContent = await queryOne<{ uuid: string; type: string }>(
+      `select uuid, type from contents where uuid = ?`,
+      [contentUuid]
+    );
 
-    const savedContents = response.data;
-    return savedContents;
+    if (existingContent) {
+      await execute(
+        `update contents set title = ?, link_id = ?, book_id = ?, type = ?, updated_at = ? where uuid = ?`,
+        [
+          content.title,
+          linkUuid,
+          content.bookId,
+          content.type ?? existingContent.type,
+          now,
+          contentUuid,
+        ]
+      );
+    } else {
+      await execute(
+        `insert into contents (uuid, title, link_id, book_id, type, created_at, updated_at)
+         values (?, ?, ?, ?, ?, ?, ?)`,
+        [contentUuid, content.title, linkUuid, content.bookId, content.type, now, now]
+      );
+    }
+
+    const saved = await queryOne<any>(
+      `select * from contents where uuid = ?`,
+      [contentUuid]
+    );
+    const linkRow = await this.getLinkById(linkUuid);
+
+    return {
+      ...saved,
+      link: linkRow
+        ? { id: Number(linkRow.id), path: linkRow.path, targetUrl: linkRow.target_url }
+        : null,
+    } as BookContentsLink;
   }
 
   async upsertAnswerSheet(content: QuizUpdateForm): Promise<BookContentsLink> {
-    // 1. create new answerSheet -> title, nQuestion, nOptions, answers, book_id
     const { nQuestion, nOptions, ...contentData } = content;
 
-    const answerSheetData = {
-      book_id: contentData.bookId,
-      counts: nQuestion,
-      answers: Array(nQuestion).fill(0),
-      n_options: Array(nQuestion).fill(nOptions),
-      points: Array(nQuestion).fill(1),
-    };
+    const answerSheetUuid = crypto.randomUUID();
+    await execute(
+      `insert into answer_sheets (uuid, book_id, counts, answers, n_options, points, created_at, updated_at)
+       values (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        answerSheetUuid,
+        contentData.bookId,
+        nQuestion,
+        JSON.stringify(Array(nQuestion).fill(0)),
+        JSON.stringify(Array(nQuestion).fill(nOptions)),
+        JSON.stringify(Array(nQuestion).fill(1)),
+        new Date().toISOString(),
+        new Date().toISOString(),
+      ]
+    );
 
-    const answerSheetResponse = await this._db
-      .from("answer_sheets")
-      .upsert(answerSheetData)
-      .select("id, uuid")
-      .single();
+    const targetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${answerSheetUuid}`;
 
-    if (answerSheetResponse.error) throw answerSheetResponse.error;
-
-    // 2. compose targetUrl for link -> /quiz/${answerSheet.id}
-    const answerSheetId = answerSheetResponse.data.uuid;
-    const targetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${answerSheetId}`;
-
-    // 3. continue with existing flow like in upsertContentLink
-    const contentWithLink = await this.upsertContentLink({
+    return this.upsertContentLink({
       ...contentData,
       targetUrl,
       type: "answer_sheet",
     });
-
-    return contentWithLink;
   }
 
   async ensureAnswerSheetContentType(answerSheetId: string): Promise<void> {
     const targetPath = `/quiz/${answerSheetId}`;
-
-    // Get content via link
     const content = await this.getContentLinkByTargetPath(targetPath);
     if (!content) throw new Error("Content link not found");
 
-    if (content.type !== "answer_sheet")
-      try {
-        // Update content type if needed
-        await this._db
-          .from("contents")
-          .update({ type: "answer_sheet" })
-          .eq("link_id", content.link_id);
-      } catch (error) {
-        throw new Error("Update content type failed");
-      }
+    if (content.type !== "answer_sheet") {
+      await execute(`update contents set type = 'answer_sheet' where link_id = ?`, [
+        content.link_id,
+      ]);
+    }
   }
 
   async deleteContentsLink(contentId: string): Promise<void> {
-    await this._db.from("contents").delete().eq("uuid", contentId);
+    await execute(`delete from contents where uuid = ?`, [contentId]);
   }
 
   async getContentByLink(path: string): Promise<BookContentsLink> {
-    const { data: links, error } = await this._db
-      .from("link")
-      .select("*")
-      .eq("path", path)
-      .limit(1)
-      .maybeSingle();
+    const link = await queryOne<any>(
+      `select * from link where path = ? limit 1`,
+      [path]
+    );
+    if (!link) throw new Error("Link not found");
 
-    if (error) throw error;
-    if (!links) throw new Error("Link not found");
+    const content = await queryOne<any>(
+      `select * from contents where link_id = ? limit 1`,
+      [link.uuid]
+    );
+    if (!content) throw new Error("Content not found");
 
-    const contentResponse = await this._db
-      .from("contents")
-      .select("*")
-      .eq("link_id", links.uuid)
-      .single();
-
-    if (contentResponse.error) throw contentResponse.error;
-
-    const data: BookContentsLink = {
-      ...contentResponse.data,
+    return {
+      ...content,
       link: {
-        ...links,
-        targetUrl: links.target_url,
+        ...link,
+        targetUrl: link.target_url,
       },
-    };
-
-    return data;
+    } as BookContentsLink;
   }
 
   async getContentLinkByTargetPath(
     targetPath: string
   ): Promise<BookContentsLink> {
-    const response = await this._db
-      .from("link")
-      .select("*")
-      .ilike("target_url", `%${targetPath}%`)
-      .single();
-    if (response.error) throw response.error;
+    const link = await queryOne<any>(
+      `select * from link where lower(target_url) like lower(?) limit 1`,
+      [`%${targetPath}%`]
+    );
+    if (!link) throw new Error("Link not found");
 
-    const contentResponse = await this._db
-      .from("contents")
-      .select("*")
-      .eq("link_id", response.data.uuid)
-      .single();
-    if (contentResponse.error) throw contentResponse.error;
+    const content = await queryOne<any>(
+      `select * from contents where link_id = ? limit 1`,
+      [link.uuid]
+    );
+    if (!content) throw new Error("Content not found");
 
-    const data: BookContentsLink = {
-      ...contentResponse.data,
+    return {
+      ...content,
       link: {
-        ...response.data,
-        targetUrl: response.data.target_url,
+        ...link,
+        targetUrl: link.target_url,
       },
-    };
-
-    return data;
+    } as BookContentsLink;
   }
 }

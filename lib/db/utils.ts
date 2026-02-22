@@ -1,10 +1,10 @@
 import { getDbClient } from "./client";
 
-function toPlainObject<T extends Record<string, unknown>>(row: Record<string, unknown>): T {
+function toPlainObject<T extends object>(row: Record<string, unknown>): T {
   return Object.fromEntries(Object.entries(row)) as T;
 }
 
-export async function query<T = Record<string, unknown>>(
+export async function query<T extends object = Record<string, unknown>>(
   sql: string,
   args?: unknown[]
 ) {
@@ -13,7 +13,9 @@ export async function query<T = Record<string, unknown>>(
   return (res.rows as Record<string, unknown>[]).map((row) => toPlainObject<T>(row));
 }
 
-export async function queryOne<T = Record<string, unknown>>(
+export async function queryOne<
+  T extends object = Record<string, unknown>
+>(
   sql: string,
   args?: unknown[]
 ) {

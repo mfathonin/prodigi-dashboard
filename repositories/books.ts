@@ -1,5 +1,6 @@
 import { constants } from "@/lib/constants";
-import { BooksAttributes, Database, QueryOptions, Tables } from "@/models";
+import { BooksAttributes, QueryOptions, Tables } from "@/models";
+import { execute, query, queryOne } from "@/lib/db/utils";
 import { AttributesRepository } from "./attributes";
 
 const {
@@ -18,6 +19,8 @@ interface Book {
   deleteBook(id: string): Promise<void>;
 }
 
+const SORTABLE_COLUMNS = new Set(["title", "created_at", "updated_at"]);
+
 export class BookRepository implements Book {
   db: any;
   private attributesRepo: AttributesRepository;
@@ -34,99 +37,107 @@ export class BookRepository implements Book {
     const isFilterActive = (filter && filter.length > 0) || isNoAttribute;
 
     if (isNoAttribute) {
-      const { data, error } = await this.db
-        .from("books")
-        .select("*, attributes:books_attributes(id)");
-
-      if (error) throw error;
-      filteredBookIds = data
-        .filter((d: any) => d.attributes.length === 0)
-        .map((d: any) => d.uuid);
-    } else if (filter && filter.length > 0 && !isNoAttribute) {
+      const rows = await query<{ uuid: string; attr_count: number }>(
+        `select b.uuid, count(ba.id) as attr_count
+         from books b
+         left join books_attributes ba on ba.book_id = b.uuid
+         group by b.uuid`
+      );
+      filteredBookIds = rows.filter((d) => Number(d.attr_count) === 0).map((d) => d.uuid);
+    } else if (filter && filter.length > 0) {
       const filtered = filter.filter((id: string) => uuid.pattern.test(id));
-
-      const { data, error } = await this.db
-        .from("books_attributes")
-        .select("book_id")
-        .in("attribute_id", filtered);
-
-      if (error) throw error;
-
-      filteredBookIds = data.map((d: any) => d.book_id);
-    }
-
-    // If no book is found with the applied filter, return an empty book list
-    if (isFilterActive && filteredBookIds.length === 0) {
-      return [];
-    }
-
-    // Start building the query for Search and Sort
-    const query = this.db.from("books").select("*, contents (id)");
-
-    if (queryOptions) {
-      const { search, sortBy, orderBy } = queryOptions;
-      if (search) {
-        query.ilike("title", `%${search}%`);
-      }
-      if (isFilterActive) {
-        query.in("uuid", filteredBookIds);
-      }
-      if (sortBy && orderBy) {
-        query.order(sortBy, { ascending: orderBy === "asc" });
+      if (filtered.length > 0) {
+        const rows = await query<{ book_id: string }>(
+          `select distinct book_id from books_attributes where attribute_id in (${filtered
+            .map(() => "?")
+            .join(",")})`,
+          filtered
+        );
+        filteredBookIds = rows.map((d) => d.book_id);
       }
     }
 
-    const response = await query;
+    if (isFilterActive && filteredBookIds.length === 0) return [];
 
-    if (response.error) {
-      throw response.error;
+    const args: unknown[] = [];
+    const where: string[] = ["b.deleted_at is null"];
+
+    if (queryOptions?.search) {
+      where.push("lower(b.title) like lower(?)");
+      args.push(`%${queryOptions.search}%`);
     }
 
-    const books = response.data;
+    if (isFilterActive) {
+      where.push(`b.uuid in (${filteredBookIds.map(() => "?").join(",")})`);
+      args.push(...filteredBookIds);
+    }
 
-    return books.map((book) => {
-      const { contents, ...rest } = book;
-      return {
-        ...rest,
-        contents: contents.length,
-      };
-    });
+    const sortBy = SORTABLE_COLUMNS.has(queryOptions?.sortBy || "")
+      ? queryOptions?.sortBy
+      : "title";
+    const orderBy = queryOptions?.orderBy === "desc" ? "desc" : "asc";
+
+    const rows = await query<any>(
+      `select b.id, b.uuid, b.title, b.firestore_id, b.created_at, b.updated_at, b.deleted_at,
+              count(c.id) as contents
+       from books b
+       left join contents c on c.book_id = b.uuid and c.deleted_at is null
+       where ${where.join(" and ")}
+       group by b.id, b.uuid, b.title, b.firestore_id, b.created_at, b.updated_at, b.deleted_at
+       order by b.${sortBy} ${orderBy}`,
+      args
+    );
+
+    return rows.map((book) => ({ ...book, contents: Number(book.contents || 0) }));
   }
 
   async getBook(id: string) {
-    const isValidUUID = uuid.pattern.test(id);
-    if (!isValidUUID) return undefined;
+    if (!uuid.pattern.test(id)) return undefined;
 
-    const response = await this.db
-      .from("books")
-      .select("*, contents (id)")
-      .eq("uuid", id)
-      .single();
+    const row = await queryOne<any>(
+      `select b.id, b.uuid, b.title, b.firestore_id, b.created_at, b.updated_at, b.deleted_at,
+              count(c.id) as contents
+       from books b
+       left join contents c on c.book_id = b.uuid and c.deleted_at is null
+       where b.uuid = ?
+       group by b.id, b.uuid, b.title, b.firestore_id, b.created_at, b.updated_at, b.deleted_at`,
+      [id]
+    );
 
-    if (response.error?.code === "PGRST116") return undefined;
-    if (response.error) {
-      throw response.error;
-    }
-
-    const book = {
-      ...response.data,
-      contents: response.data.contents.length,
-    };
-
-    return book;
+    if (!row) return undefined;
+    return { ...row, contents: Number(row.contents || 0) };
   }
 
   async upsertBook(book: Books): Promise<Books> {
-    const response = await this.db.from("books").upsert(book).select().single();
-    if (response.error) {
-      throw response.error;
+    const now = new Date().toISOString();
+    const bookUuid = book.uuid || crypto.randomUUID();
+
+    const existing = await queryOne<{ uuid: string }>(
+      `select uuid from books where uuid = ?`,
+      [bookUuid]
+    );
+
+    if (existing) {
+      await execute(
+        `update books set title = ?, firestore_id = ?, updated_at = ? where uuid = ?`,
+        [book.title, book.firestore_id ?? null, now, bookUuid]
+      );
+    } else {
+      await execute(
+        `insert into books (uuid, title, firestore_id, created_at, updated_at) values (?, ?, ?, ?, ?)`,
+        [bookUuid, book.title, book.firestore_id ?? null, now, now]
+      );
     }
 
-    const savedBook = response.data;
-    return savedBook;
+    const savedBook = await queryOne<Books>(
+      `select id, uuid, title, firestore_id, created_at, updated_at, deleted_at from books where uuid = ?`,
+      [bookUuid]
+    );
+
+    return savedBook as Books;
   }
 
   async deleteBook(id: string): Promise<void> {
-    await this.db.from("books").delete().eq("uuid", id);
+    await execute(`delete from books where uuid = ?`, [id]);
   }
 }

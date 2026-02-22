@@ -138,7 +138,9 @@ export const ContentCard = ({
         <div className="flex flex-col w-full md:flex-row gap-x-10 gap-y-3">
           <div className="flex flex-col flex-1 gap-y-2">
             <div className="flex items-center gap-x-2">
-              <Badge variant={content.type}>{LABEL[content.type ?? 'content']}</Badge>
+              <Badge variant={content.type}>
+                {LABEL[(content.type ?? "content") as keyof typeof LABEL]}
+              </Badge>
               <p className="text-sm">{content.title}</p>
             </div>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 line-clamp-1">
