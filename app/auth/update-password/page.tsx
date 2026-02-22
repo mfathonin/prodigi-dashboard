@@ -1,4 +1,3 @@
-import { redirectIfUnauthenticated } from "@/lib/auth-helpers";
 import UpdatePasswordForm from "./form";
 
 export default async function UpdatePasswordPage({
@@ -6,10 +5,9 @@ export default async function UpdatePasswordPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  // server component
-  // check url params for code or the code is expired
+  const token = searchParams["token"];
   const code = searchParams["code"];
-  const token_hash = searchParams["token_hash"];
+  const tokenHash = searchParams["token_hash"];
   const error = searchParams["error"];
   const error_description = searchParams["error_description"];
 
@@ -17,5 +15,11 @@ export default async function UpdatePasswordPage({
     return <div>{error_description}</div>;
   }
 
-  return <UpdatePasswordForm />;
+  const resolvedToken =
+    (typeof token === "string" && token) ||
+    (typeof code === "string" && code) ||
+    (typeof tokenHash === "string" && tokenHash) ||
+    null;
+
+  return <UpdatePasswordForm initialToken={resolvedToken} />;
 }

@@ -9,6 +9,8 @@ import {
 } from "@/lib/auth/service";
 import { ExtendedUser } from "@/models/users";
 import { revalidatePath } from "next/cache";
+import { sendInviteEmail } from "@/lib/email";
+import { getServerAppBaseUrl } from "@/lib/url";
 import { redirect } from "next/navigation";
 import { execute } from "./db/utils";
 
@@ -41,8 +43,10 @@ export async function deleteUser(userId: string) {
 
 export async function inviteUser(email: string) {
   const data = await inviteUserByEmail(email);
+  const inviteUrl = `${getServerAppBaseUrl()}/auth/set-password?token=${data.token}`;
+  await sendInviteEmail(email, inviteUrl);
   revalidatePath("/users");
-  return data;
+  return { ...data, inviteUrl };
 }
 
 export async function toggleAdminRole(userId: string, isAdminRole: boolean) {

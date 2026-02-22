@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { handleUpdatePassword } from "../actions";
@@ -30,11 +30,26 @@ const updatePasswordSchema = z
 
 type UpdatePasswordForm = z.infer<typeof updatePasswordSchema>;
 
-export default function UpdatePasswordForm() {
+type UpdatePasswordFormProps = {
+  initialToken?: string | null;
+};
+
+export default function UpdatePasswordForm({ initialToken = null }: UpdatePasswordFormProps) {
   const [errorMessage, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const token = useMemo(
+    () =>
+      initialToken ??
+      searchParams.get("token") ??
+      searchParams.get("token_hash") ??
+      searchParams.get("code"),
+    [initialToken, searchParams]
+  );
+  const isTokenMode = Boolean(token);
 
   const form = useForm<UpdatePasswordForm>({
     resolver: zodResolver(updatePasswordSchema),
@@ -45,6 +60,26 @@ export default function UpdatePasswordForm() {
   });
 
   const onSubmit = async (values: UpdatePasswordForm) => {
+    if (isTokenMode) {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: values.password }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || "Invalid reset token");
+        setSuccessMessage(null);
+        return;
+      }
+
+      setSuccessMessage("Password updated successfully.");
+      setError(null);
+      router.push("/");
+      return;
+    }
+
     const { error: updateError } = await handleUpdatePassword(values.password);
 
     if (updateError) {
@@ -58,6 +93,11 @@ export default function UpdatePasswordForm() {
   };
 
   useEffect(() => {
+    if (isTokenMode) {
+      setUserEmail("Password reset via email link");
+      return;
+    }
+
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => {
@@ -67,8 +107,8 @@ export default function UpdatePasswordForm() {
           setUserEmail(data.user.email);
         }
       })
-      .catch((err) => setError("Gagal memperbarui sesi"));
-  }, []);
+      .catch(() => setError("Gagal memperbarui sesi"));
+  }, [isTokenMode]);
 
   return (
     <>
@@ -135,7 +175,11 @@ export default function UpdatePasswordForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full mt-4" disabled={!userEmail}>
+          <Button
+            type="submit"
+            className="w-full mt-4"
+            disabled={!isTokenMode && !userEmail}
+          >
             Ubah Password
           </Button>
         </form>

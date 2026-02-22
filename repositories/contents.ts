@@ -28,6 +28,7 @@ interface Contents {
   getBookContents(bookId: string): Promise<BookContentsLink[]>;
   upsertContentLink(contents: ContentUpdateForm): Promise<BookContentsLink>;
   upsertAnswerSheet(content: QuizUpdateForm): Promise<BookContentsLink>;
+  upsertExercise(content: ContentUpdateForm): Promise<BookContentsLink>;
   ensureAnswerSheetContentType(answerSheetId: string): Promise<void>;
   deleteContentsLink(contentId: string): Promise<void>;
   getContentByLink(path: string): Promise<BookContentsLink>;
@@ -163,6 +164,23 @@ export class ContentsRepository implements Contents {
       ...contentData,
       targetUrl,
       type: "answer_sheet",
+    });
+  }
+
+  async upsertExercise(content: ContentUpdateForm): Promise<BookContentsLink> {
+    const exerciseUuid = crypto.randomUUID();
+    const now = new Date().toISOString();
+    await execute(
+      `insert into exercises (uuid, book_id, created_at, updated_at) values (?, ?, ?, ?)`,
+      [exerciseUuid, content.bookId, now, now]
+    );
+
+    const targetUrl = `${getAppBaseUrl()}/exercise/${exerciseUuid}`;
+
+    return this.upsertContentLink({
+      ...content,
+      targetUrl,
+      type: "exercise",
     });
   }
 

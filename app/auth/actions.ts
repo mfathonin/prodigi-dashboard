@@ -9,6 +9,8 @@ import {
 } from "@/lib/auth/service";
 import { ServerActionResult } from "@/models/results";
 import { AppUser } from "@/lib/auth/types";
+import { sendPasswordResetEmail } from "@/lib/email";
+import { getServerAppBaseUrl } from "@/lib/url";
 
 const errors = constants.errors.auth;
 
@@ -47,7 +49,8 @@ export const handleResetPassword = async (
     const { token } = await requestPasswordReset(email);
     if (!token) return { data: "If account exists, reset is available", error: null };
 
-    const resetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/update-password?token=${token}`;
+    const resetUrl = `${getServerAppBaseUrl()}/auth/update-password?token=${token}`;
+    await sendPasswordResetEmail(email, resetUrl);
     console.info("Password reset link", { email, resetUrl });
     return { data: resetUrl, error: null };
   } catch (error) {

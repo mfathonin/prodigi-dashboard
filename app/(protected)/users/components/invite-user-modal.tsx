@@ -34,8 +34,7 @@ export function InviteUserModal({
 
     try {
       const res = await inviteUser(email);
-      const link = `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/set-password?token=${res.token}`;
-      setInviteLink(link);
+      setInviteLink(res.inviteUrl);
       toast.success("Undangan terkirim", {
         description: `Undangan telah dikirim ke ${email}`,
       });
