@@ -7,7 +7,7 @@ Prodigi Dashboard is an admin web application for managing digital book content.
 - [Next.js 14](https://nextjs.org/docs) with App Router
 - [shadcn/ui](https://ui.shadcn.com) for UI components
 - [Tailwind CSS](https://tailwindcss.com) for styling
-- [Supabase](https://supabase.com) for backend services
+- SQLite/libSQL (migration in progress)
 
 ## Getting Started
 
@@ -29,7 +29,10 @@ Prodigi Dashboard is an admin web application for managing digital book content.
    - Copy `.env.example` to `.env.local`
    - Update the variables in `.env.local` with your Supabase credentials
 
-1. Ensure your Supabase project is properly configured and accessible
+1. Configure database mode:
+
+   - `DATABASE_DRIVER=sqlite-file` with `DATABASE_URL=file:./dev.db` for local
+   - `DATABASE_DRIVER=libsql` with `LIBSQL_URL` and `LIBSQL_AUTH_TOKEN` for remote
 
 ### Development
 
@@ -41,17 +44,14 @@ pnpm dev
 
 Visit [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-### Supabase Scripts
+### Database Scripts
 
-The project includes several helpful scripts for working with Supabase:
+The project includes scripts for local/remote SQLite:
 
-- `pnpm supa:start`: Start the local Supabase service
-- `pnpm supa:stop`: Stop the local Supabase service
-- `pnpm supa:typegen`: Generate TypeScript types from your Supabase schema
-- `pnpm supa:db:diff`: Generate a diff of your database changes
-- `pnpm supa:db:check`: Check the status of your Supabase database
-- `pnpm supa:db:push`: Push local changes to your Supabase database
-- `pnpm supa:db:backup`: Create a backup of your Supabase database
+- `pnpm db:init`: Create bootstrap auth/banner tables
+- `pnpm db:generate`: Generate drizzle migrations
+- `pnpm db:push`: Apply schema to DB
+- `pnpm db:studio`: Open Drizzle Studio
 
 For more details on these scripts, refer to the `package.json` file.
 

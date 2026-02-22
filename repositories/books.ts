@@ -1,6 +1,5 @@
 import { constants } from "@/lib/constants";
 import { BooksAttributes, Database, QueryOptions, Tables } from "@/models";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { AttributesRepository } from "./attributes";
 
 const {
@@ -20,7 +19,7 @@ interface Book {
 }
 
 export class BookRepository implements Book {
-  db: SupabaseClient<Database>;
+  db: any;
   private attributesRepo: AttributesRepository;
 
   constructor(_db: any) {

@@ -1,5 +1,4 @@
 import { Database, Tables } from "@/models/supaservice.types";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { constants } from "@/lib/constants";
 import { AnswerSheet } from "@/models";
 
@@ -39,9 +38,9 @@ interface AnswerSheets {
 }
 
 export class AnswerSheetRepository implements AnswerSheets {
-  private db: SupabaseClient<Database>;
+  private db: any;
 
-  constructor(supabase: SupabaseClient<Database>) {
+  constructor(supabase: any) {
     this.db = supabase;
   }
 

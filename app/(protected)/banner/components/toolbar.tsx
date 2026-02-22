@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ChangeEventHandler, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -30,7 +29,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { constants } from "@/lib/constants";
-import { createClient } from "@/lib/supaclient/client";
 import { useBannerDialog } from "../dialog-context";
 
 const urlValidation = constants.validation.url;
@@ -81,37 +79,22 @@ export const Toolbar = () => {
 
   const onSubmit = async (values: BannerSchema) => {
     setIsSubmitting(true);
-    const supabase = createClient();
 
     try {
-      // Upload image to Supabase storage
-      const file = values.image[0] as File;
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("banner")
-        .upload(fileName, file);
+      const formData = new FormData();
+      formData.append("image", values.image[0] as File);
+      formData.append("url", values.url);
 
-      if (uploadError) {
-        throw uploadError;
+      const response = await fetch("/api/banner/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed uploading banner");
       }
 
-      // Get public URL of the uploaded image
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("banner").getPublicUrl(fileName);
-
-      // Save banner information to the "banner" table
-      const { data: insertData, error: insertError } = await supabase
-        .from("banner")
-        .insert({
-          image: publicUrl,
-          url: values.url,
-        });
-
-      if (insertError) throw insertError;
-
-      // Refresh the page using router.refresh()
       router.refresh();
 
       toast.success("Banner Tersimpan", {
@@ -244,11 +227,3 @@ export const Toolbar = () => {
     </div>
   );
 };
-
-/**
- * 
- * <Dialog defaultOpen>
-      <DialogTrigger asChild>
-        <Button variant="outline">Open Image Picker</Button>
-      
- */

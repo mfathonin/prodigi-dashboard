@@ -1,7 +1,6 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { createClient } from "@/lib/supaclient/client";
 import { ExtendedUser } from "@/models/users";
 import { ColumnDef } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
@@ -51,8 +50,6 @@ export const columns: ColumnDef<ExtendedUser>[] = [
 ];
 
 const AdminCheckbox = ({ user }: { user: ExtendedUser }) => {
-  const supabase = createClient();
-
   const isAdmin =
     user.user_roles?.some((role) => role.role === "admin") || false;
   const [isAdminState, setIsAdminState] = useState(isAdmin);
@@ -60,19 +57,11 @@ const AdminCheckbox = ({ user }: { user: ExtendedUser }) => {
   const [currentUser, setCurrentUser] = useState<ExtendedUser | null>(null);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("Error getting user:", error);
-        toast.error("Failed to get user", {
-          description: "Failed to get user",
-        });
-      } else {
-        setCurrentUser(data.user);
-      }
-    };
-    getUser();
-  }, [supabase.auth]);
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => setCurrentUser(data.user))
+      .catch(() => null);
+  }, []);
 
   const handleCheckboxChange = async (checked: boolean) => {
     setIsLoading(true);

@@ -1,5 +1,5 @@
 import { checkAdminAccess } from "@/lib/auth-helpers";
-import { createAdminClient } from "@/lib/supaclient/admin";
+import { query } from "@/lib/db/utils";
 import { ExtendedUser } from "@/models/users";
 import { unstable_cache } from "next/cache";
 import { columns } from "./components/columns";
@@ -7,34 +7,18 @@ import { DataTable } from "./components/data-table";
 
 const getUsers = unstable_cache(
   async () => {
-    const supabaseAdmin = await createAdminClient();
+    const users = await query<ExtendedUser>(
+      `select id, email, created_at, updated_at, last_sign_in_at from users order by created_at desc`
+    );
 
-    // Fetch users from Supabase
-    const { data: users, error: usersError } =
-      await supabaseAdmin.auth.admin.listUsers();
+    const roles = await query<{ id: string; role: string }>(
+      `select id, role from user_roles`
+    );
 
-    if (usersError) {
-      console.error("Error fetching users:", { usersError, supabaseAdmin });
-      throw usersError;
-    }
-
-    // Fetch user roles
-    const { data: userRoles, error: rolesError } = await supabaseAdmin
-      .from("user_roles")
-      .select("*");
-
-    if (rolesError) {
-      console.error("Error fetching user roles:", rolesError);
-      throw rolesError;
-    }
-
-    // Combine user data with roles
-    const usersWithRoles: ExtendedUser[] = users.users.map((user) => ({
+    return users.map((user) => ({
       ...user,
-      user_roles: userRoles.filter((role) => role.id === user.id),
+      user_roles: roles.filter((role) => role.id === user.id),
     }));
-
-    return usersWithRoles;
   },
   ["users"],
   { tags: ["users"] }

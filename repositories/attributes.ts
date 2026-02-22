@@ -1,5 +1,4 @@
 import { Database, Tables } from "@/models";
-import { SupabaseClient } from "@supabase/supabase-js";
 
 type BooksAttritbutes = Tables<"attributes">;
 type AttributesList = { [key: string]: { uuid: string; value: string }[] };
@@ -14,7 +13,7 @@ interface Attributes {
 }
 
 export class AttributesRepository implements Attributes {
-  _db: SupabaseClient<Database>;
+  _db: any;
 
   constructor(db: any) {
     this._db = db;

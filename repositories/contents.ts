@@ -5,7 +5,6 @@ import {
   QuizUpdateForm,
   Tables,
 } from "@/models";
-import { SupabaseClient } from "@supabase/supabase-js";
 
 type BookContentsLink = Tables<"contents"> & {
   link: {
@@ -26,7 +25,7 @@ interface Contents {
 }
 
 export class ContentsRepository implements Contents {
-  private _db: SupabaseClient<Database>;
+  private _db: any;
 
   constructor(db: any) {
     this._db = db;

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 
 import GlobalNotFound from "@/app/not-found";
+import { currentUserWithRoles } from "@/lib/auth/service";
 import { createClient } from "@/lib/supaclient/server";
 import { cn } from "@/lib/utils";
 import { AnswerSheetRepository } from "@/repositories/answer-sheets";
@@ -21,14 +22,10 @@ export default async function QuizLayout({
   const supabase = createClient();
   const contentRepo = new ContentsRepository(supabase);
   let contentLink;
-  let isAuthenticated: boolean = false;
-  const [ct, auth] = await Promise.allSettled([
+  const isAuthenticated = Boolean(await currentUserWithRoles());
+  const [ct] = await Promise.allSettled([
     contentRepo.getContentLinkByTargetPath(`/quiz/${params.id}`),
-    supabase.auth.getUser(),
   ]);
-
-  if (auth.status === "fulfilled")
-    isAuthenticated = Boolean(auth.value.data.user);
 
   if (ct.status === "fulfilled") contentLink = ct.value;
   else {

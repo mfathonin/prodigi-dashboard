@@ -1,8 +1,8 @@
-import { User } from "@supabase/supabase-js";
+import { AppUser } from "@/lib/auth/types";
 import { UserItem } from "./user-item";
 
 type UserListProps = {
-  users: User[];
+  users: AppUser[];
 };
 
 export const UserList = ({ users }: UserListProps) => {

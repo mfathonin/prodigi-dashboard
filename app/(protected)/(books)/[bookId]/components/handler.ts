@@ -6,12 +6,11 @@ import {
   validateAnswerSheetContent,
 } from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supaclient/client";
 
 const addContent = async (
   content: ContentUpdateForm,
-  supabase: SupabaseClient
+  supabase: any
 ) => {
   if (!isExternalContent(content)) {
     throw new Error("Invalid content type");
@@ -23,7 +22,7 @@ const addContent = async (
 
 const addAnswerSheet = async (
   content: ContentUpdateForm,
-  supabase: SupabaseClient
+  supabase: any
 ) => {
   if (!isAnswerSheetContent(content)) {
     throw new Error("Invalid answer sheet content");

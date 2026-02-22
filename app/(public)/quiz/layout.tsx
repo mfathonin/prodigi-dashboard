@@ -2,15 +2,12 @@ import { Metadata } from "next";
 
 import { Footer } from "@/app/(protected)/components/footer";
 import { TopNavbar } from "@/app/(protected)/components/top-navbar";
-import { createClient } from "@/lib/supaclient/server";
+import { currentUserWithRoles } from "@/lib/auth/service";
 import { cn } from "@/lib/utils";
 
 const getAuthStatus = async (): Promise<boolean> => {
-  const supabase = createClient();
-  const { data: auth, error } = await supabase.auth.getUser();
-  if (error) return false;
-
-  return Boolean(auth.user);
+  const user = await currentUserWithRoles();
+  return Boolean(user);
 };
 
 export async function generateMetadata(): Promise<Metadata> {
