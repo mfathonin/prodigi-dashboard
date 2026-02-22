@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,7 +10,6 @@ export const BannerDetail = ({
 }: {
   data: { uuid: string; image: string; url: string };
 }) => {
-  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -26,7 +24,7 @@ export const BannerDetail = ({
         throw new Error(body.error || "Failed deleting banner");
       }
 
-      router.refresh();
+      window.location.reload();
 
       toast.success("Banner Dihapus", {
         description: "Banner berhasil dihapus",

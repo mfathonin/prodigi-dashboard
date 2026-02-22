@@ -6,6 +6,12 @@ import { BannerDetail } from "./components/banner-detail";
 import { EmptyBanner } from "./components/empty-banner";
 
 export default async function BannerPage() {
+  const appBaseUrl =
+    process.env.NEXT_PUBLIC_LINKS_APP ??
+    (process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `http://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : "http://localhost:3013");
+
   const bannerData = await query<{ uuid: string; image: string; url: string }>(
     `select uuid, image, url from banner`
   );
@@ -13,9 +19,7 @@ export default async function BannerPage() {
   const imageWithPlaceholder = await Promise.all(
     bannerData.map(async ({ image: src, url, uuid }) => {
       const imageWithPlaceholder = await getPlaceholderImage(
-        src.startsWith("/")
-          ? `${process.env.NEXT_PUBLIC_LINKS_APP}${src}`
-          : src
+        src.startsWith("/") ? `${appBaseUrl}${src}` : src
       );
       return { ...imageWithPlaceholder, url, uuid };
     })

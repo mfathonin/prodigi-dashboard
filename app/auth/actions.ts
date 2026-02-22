@@ -45,12 +45,11 @@ export const handleResetPassword = async (
 ): Promise<ServerActionResult<string>> => {
   try {
     const { token } = await requestPasswordReset(email);
-    if (token) {
-      const resetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/update-password?token=${token}`;
-      console.info("Password reset link", { email, resetUrl });
-    }
+    if (!token) return { data: "If account exists, reset is available", error: null };
 
-    return { data: "Password reset email sent", error: null };
+    const resetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/update-password?token=${token}`;
+    console.info("Password reset link", { email, resetUrl });
+    return { data: resetUrl, error: null };
   } catch (error) {
     return handleError(error);
   }

@@ -7,19 +7,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MenuItems } from "@/components/ui/menu-items";
-import { createClient } from "@/lib/supaclient/client";
 import { cn } from "@/lib/utils";
 import { Books, BooksContentsCount, BookUpdateForm } from "@/models";
-import { AttributesRepository } from "@/repositories/attributes";
-import { BookRepository } from "@/repositories/books";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
 import { useDialog } from "../../dialog/provider";
 
 export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
-  const supabase = createClient();
-  const bookRepo = new BookRepository(supabase);
 
   const path = usePathname();
   const router = useRouter();
@@ -65,22 +60,15 @@ export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
                       result as BookUpdateForm;
 
                     try {
-                      await bookRepo.upsertBook({
-                        id: _bookData.id,
-                        title: _bookData.title,
-                      } as Books);
-
-                      if (attributes && attributes.length > 0) {
-                        await new AttributesRepository(
-                          supabase
-                        ).addBookAttributes(_book.uuid, attributes);
-                      }
-
-                      if (deleted_attributes && deleted_attributes.length > 0) {
-                        await new AttributesRepository(
-                          supabase
-                        ).removeBookAttributes(_book.uuid, deleted_attributes);
-                      }
+                      await fetch(`/api/books/${_book.uuid}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          title: _bookData.title,
+                          attributes: attributes ?? [],
+                          deleted_attributes: deleted_attributes ?? [],
+                        }),
+                      });
 
                       toast("Berhasil Menyimpan 🎉", {
                         description: `Buku "${_bookData.title}" berhasil disimpan!`,
@@ -106,7 +94,7 @@ export const BookOptions = ({ book }: { book: BooksContentsCount }) => {
               dialog.openDialog("alert", book, async (result) => {
                 if (typeof result === "boolean" && result) {
                   try {
-                    await bookRepo.deleteBook(book.uuid);
+                    await fetch(`/api/books/${book.uuid}`, { method: "DELETE" });
 
                     router.refresh();
 

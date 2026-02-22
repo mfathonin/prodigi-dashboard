@@ -6,6 +6,16 @@ import {
 } from "@/models";
 import { execute, query, queryOne } from "@/lib/db/utils";
 
+function getAppBaseUrl() {
+  return (
+    process.env.NEXT_PUBLIC_LINKS_APP ??
+    (process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `http://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : "http://localhost:3013")
+  );
+}
+
+
 type BookContentsLink = Tables<"contents"> & {
   link: {
     id: number;
@@ -147,7 +157,7 @@ export class ContentsRepository implements Contents {
       ]
     );
 
-    const targetUrl = `${process.env.NEXT_PUBLIC_LINKS_APP}/quiz/${answerSheetUuid}`;
+    const targetUrl = `${getAppBaseUrl()}/quiz/${answerSheetUuid}`;
 
     return this.upsertContentLink({
       ...contentData,

@@ -16,7 +16,6 @@ import {
   ContentUpdateForm,
   ExternalContentUpdateForm,
 } from "@/models";
-import { ContentsRepository } from "@/repositories/contents";
 import { useRouter } from "next/navigation";
 import { toCanvas } from "qrcode";
 import { useEffect, useRef } from "react";
@@ -72,11 +71,7 @@ export const ContentCard = ({
 
     dialog?.openDialog("alert", _content, async (result) => {
       if (typeof result === "boolean" && result) {
-        const supabase = (
-          await import("@/lib/supaclient/client")
-        ).createClient();
-
-        await new ContentsRepository(supabase).deleteContentsLink(content.uuid);
+        await fetch(`/api/contents/${content.uuid}`, { method: "DELETE" });
 
         router.refresh();
       }
@@ -97,14 +92,11 @@ export const ContentCard = ({
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
       if (result) {
-        const supabase = (
-          await import("@/lib/supaclient/client")
-        ).createClient();
-
-        // console.log("on update content link", { result });
-        await new ContentsRepository(supabase).upsertContentLink(
-          result as ExternalContentUpdateForm
-        );
+        await fetch(`/api/contents/${content.uuid}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result as ExternalContentUpdateForm),
+        });
 
         router.refresh();
       }
@@ -116,7 +108,16 @@ export const ContentCard = ({
       case "answer_sheet":
       case "exercise":
         if (link.targetUrl) {
-          const targetUrl = new URL(link.targetUrl);
+          let normalized = link.targetUrl;
+          if (normalized.startsWith("undefined/")) {
+            normalized = `/${normalized.replace(/^undefined\//, "")}`;
+          }
+          normalized = normalized.replace("/quize/", "/quiz/");
+
+          const targetUrl = normalized.startsWith("http")
+            ? new URL(normalized)
+            : new URL(normalized, window.location.origin);
+
           window.open(targetUrl.pathname, "_blank");
         }
         break;

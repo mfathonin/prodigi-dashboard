@@ -17,8 +17,7 @@ export function InviteUserButton() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {
-          window.location.reload();
-          setIsModalOpen(false);
+          // Keep modal open so dev invite link can be copied.
         }}
       />
     </>

@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
 import { Books, BookUpdateForm, FilterSort } from "@/models";
-import { AttributesRepository } from "@/repositories/attributes";
-import { BookRepository } from "@/repositories/books";
 
 import { useDialog } from "../../dialog/provider";
 
@@ -96,26 +94,17 @@ export const Toolbar = () => {
           dialog &&
             dialog.openDialog("form", EMPTY_BOOK_TEMPLATE, async (result) => {
               if (result) {
-                const supabase = (
-                  await import("@/lib/supaclient/client")
-                ).createClient();
-
                 const { attributes, deleted_attributes, ...bookData } =
                   result as BookUpdateForm;
 
-                const newBook = await new BookRepository(supabase).upsertBook({
-                  title: bookData.title,
-                } as Books);
-
-                if (
-                  attributes &&
-                  Array.isArray(attributes) &&
-                  attributes.length > 0
-                )
-                  await new AttributesRepository(supabase).addBookAttributes(
-                    newBook.uuid,
-                    attributes
-                  );
+                await fetch("/api/books", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    title: bookData.title,
+                    attributes: attributes ?? [],
+                  }),
+                });
 
                 router.refresh();
 

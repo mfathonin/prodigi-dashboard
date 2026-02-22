@@ -10,16 +10,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supaclient/client";
-import {
-  AttritbutesList,
-  bookSchema,
-  type Books,
-  type BookUpdateForm,
-} from "@/models";
-import { AttributesRepository } from "@/repositories/attributes";
+import { AttritbutesList, bookSchema, type Books, type BookUpdateForm } from "@/models";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { AttributeSelector } from "./components/attribute-selector";
 
@@ -36,13 +29,6 @@ export const BookForm = ({
   onClose,
   onSaved,
 }: BookFormProps) => {
-  const supabase = createClient();
-  const attributesRepo = useMemo(
-    () => new AttributesRepository(supabase),
-    [supabase]
-  );
-
-  const [attributes, setAttributes] = useState<AttritbutesList>();
   const [bookAttributes, setBookAttributes] = useState<string[]>([]);
 
   const bookForm = useForm<BookUpdateForm>({
@@ -58,18 +44,16 @@ export const BookForm = ({
   });
 
   useEffect(() => {
-    attributesRepo.getAttributes().then((data) => {
-      setAttributes(data);
-      if (book.uuid) {
-        attributesRepo.getBookAttributes(book.uuid).then((data) => {
-          const _bookAttributes = data.map((d) => d.uuid);
+    if (book.uuid) {
+      fetch(`/api/books/${book.uuid}/attributes`)
+        .then((r) => r.json())
+        .then((data) => {
+          const _bookAttributes = (data ?? []).map((d: any) => d.uuid);
           setBookAttributes(_bookAttributes);
           bookForm.setValue("attributes", _bookAttributes);
         });
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attributesRepo, book.uuid]);
+    }
+  }, [book.uuid, bookForm]);
 
   const onSubmit = async (values: BookUpdateForm) => {
     let _attributes =
@@ -112,7 +96,7 @@ export const BookForm = ({
             />
           </div>
           <FormField
-            key={(attributes?.length ?? -99).toString()}
+            key={book.uuid ?? "new"}
             control={bookForm.control}
             name="attributes"
             render={({ field }) => (

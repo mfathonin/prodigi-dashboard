@@ -9,9 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient } from "@/lib/supaclient/client";
 import { AttritbutesList } from "@/models";
-import { AttributesRepository } from "@/repositories/attributes";
 import { useEffect, useMemo, useState } from "react";
 import { ControllerRenderProps } from "react-hook-form";
 import Link from "next/link";
@@ -25,9 +23,10 @@ export const AttributeSelector = ({
   const { error } = useFormField();
 
   useEffect(() => {
-    const supabase = createClient();
-    const attributesRepo = new AttributesRepository(supabase);
-    attributesRepo.getAttributes().then(setAttributes);
+    fetch("/api/attributes")
+      .then((r) => r.json())
+      .then(setAttributes)
+      .catch(() => setAttributes({}));
   }, []);
 
   if (!attributes) return null;
@@ -131,8 +130,7 @@ export const AttributeSelectorItem = ({
   useEffect(() => {
     setSelectedKey(initialKey);
     setSelectedValue(selectedUUID);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUUID]);
+  }, [selectedUUID, initialKey]);
 
   return (
     <div key={selectedKey ?? ""} className="flex gap-2 w-full">

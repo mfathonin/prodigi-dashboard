@@ -26,17 +26,19 @@ export function InviteUserModal({
 }: InviteUserModalProps) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await inviteUser(email);
+      const res = await inviteUser(email);
+      const link = `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/set-password?token=${res.token}`;
+      setInviteLink(link);
       toast.success("Undangan terkirim", {
         description: `Undangan telah dikirim ke ${email}`,
       });
-      onClose();
       onSuccess();
     } catch (error) {
       toast.error("Gagal mengirim undangan", {
@@ -68,6 +70,14 @@ export function InviteUserModal({
               required
             />
           </div>
+          {inviteLink && (
+            <div className="text-xs break-all">
+              <p className="mb-1">Dev invite link:</p>
+              <a className="underline" href={inviteLink}>
+                {inviteLink}
+              </a>
+            </div>
+          )}
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Batal
