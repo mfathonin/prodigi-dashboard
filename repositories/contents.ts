@@ -106,13 +106,18 @@ export class ContentsRepository implements Contents {
     );
 
     if (existingContent) {
+      const preservedType =
+        existingContent.type === "answer_sheet" || existingContent.type === "exercise"
+          ? existingContent.type
+          : content.type ?? existingContent.type;
+
       await execute(
         `update contents set title = ?, link_id = ?, book_id = ?, type = ?, updated_at = ? where uuid = ?`,
         [
           content.title,
           linkUuid,
           content.bookId,
-          content.type ?? existingContent.type,
+          preservedType,
           now,
           contentUuid,
         ]
