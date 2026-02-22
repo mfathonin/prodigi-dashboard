@@ -37,7 +37,7 @@ export default function LoginForm() {
       return;
     }
 
-    window.location.href = "/users";
+    window.location.href = "/";
   };
 
   return (

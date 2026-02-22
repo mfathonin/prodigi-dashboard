@@ -9,7 +9,7 @@ export default function UnauthorizedPage() {
         Maaf, Anda tidak memiliki izin untuk mengakses halaman ini.
       </p>
       <Button asChild size="sm" className="mt-8 !z-50">
-        <Link href="/">Kembali ke Beranda</Link>
+        <Link href="/books">Kembali ke Beranda</Link>
       </Button>
     </>
   );

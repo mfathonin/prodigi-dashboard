@@ -65,7 +65,7 @@ export default function SetPasswordPage() {
 
     setSuccessMessage("Password berhasil dibuat");
     setError(null);
-    router.push("/");
+    router.push("/books");
   };
 
   return (

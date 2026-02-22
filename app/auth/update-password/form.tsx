@@ -76,7 +76,7 @@ export default function UpdatePasswordForm({ initialToken = null }: UpdatePasswo
 
       setSuccessMessage("Password updated successfully.");
       setError(null);
-      router.push("/");
+      router.push("/books");
       return;
     }
 
@@ -88,7 +88,7 @@ export default function UpdatePasswordForm({ initialToken = null }: UpdatePasswo
     } else {
       setSuccessMessage("Password updated successfully.");
       setError(null);
-      router.push("/");
+      router.push("/books");
     }
   };
 
