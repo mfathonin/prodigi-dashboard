@@ -4,6 +4,8 @@ import { hashPassword, verifyPassword } from "./password";
 import { createSession, destroySession, getSessionUser } from "./session";
 import type { AppUser, SessionUser } from "./types";
 
+const DUMMY_PASSWORD_HASH = hashPassword("__dummy_password__");
+
 function sha256(v: string) {
   return createHash("sha256").update(v).digest("hex");
 }
@@ -17,9 +19,9 @@ export async function signInWithPassword(email: string, password: string) {
     `select id, email, created_at, updated_at, last_sign_in_at, password_hash from users where lower(email)=lower(?)`,
     [email]
   );
-  if (!row) return { user: null, error: new Error("Invalid credentials") };
-
-  if (!verifyPassword(password, row.password_hash)) {
+  const hashToVerify = row?.password_hash ?? DUMMY_PASSWORD_HASH;
+  const valid = verifyPassword(password, hashToVerify);
+  if (!row || !valid) {
     return { user: null, error: new Error("Invalid credentials") };
   }
 
@@ -103,7 +105,15 @@ export async function consumePasswordResetToken(token: string, newPassword: stri
     return row.user_id;
   });
 
-  await createSession(userId);
+  try {
+    await createSession(userId);
+  } catch (error) {
+    console.error("[auth/service] failed to create session after password reset", {
+      userId,
+      error,
+    });
+    throw new Error("Session setup failed");
+  }
 }
 
 export async function updatePasswordForCurrentUser(newPassword: string) {
@@ -177,5 +187,13 @@ export async function consumeInviteToken(token: string, password: string) {
     return nextUserId;
   });
 
-  await createSession(userId);
+  try {
+    await createSession(userId);
+  } catch (error) {
+    console.error("[auth/service] failed to create session after invite consume", {
+      userId,
+      error,
+    });
+    throw new Error("Session setup failed");
+  }
 }

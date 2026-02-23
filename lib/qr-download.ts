@@ -53,7 +53,7 @@ export const downloadQRCodes = async (
   if (!Array.isArray(data)) {
     const { canvas, name } = data;
     canvas.toBlob((blob) => {
-      if (blob) saveAs(blob, `${name}.jpeg`);
+      if (blob) saveAs(blob, `${name}.png`);
     });
   }
 };

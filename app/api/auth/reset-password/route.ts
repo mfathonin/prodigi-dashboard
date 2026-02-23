@@ -17,9 +17,24 @@ export async function POST(request: Request) {
     await consumePasswordResetToken(token, password);
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (
+      error instanceof Error &&
+      ["Invalid token", "Token expired"].includes(error.message)
+    ) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    if (error instanceof Error && error.message === "Session setup failed") {
+      return NextResponse.json(
+        { error: "Password updated. Please sign in again." },
+        { status: 500 }
+      );
+    }
+
+    console.error("[api/auth/reset-password.POST] failed:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Invalid token" },
-      { status: 400 }
+      { error: "Unable to reset password" },
+      { status: 500 }
     );
   }
 }
