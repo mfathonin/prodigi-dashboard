@@ -34,9 +34,15 @@ export class BookRepository implements Book {
     const { filter } = queryOptions ?? {};
     let filteredBookIds: string[] = [];
     const isNoAttribute = filter?.includes("none");
+    const hasUuidFilters = Boolean(filter?.some((id) => uuid.pattern.test(id)));
     const isFilterActive = (filter && filter.length > 0) || isNoAttribute;
 
     if (isNoAttribute) {
+      // Product decision: when "none" is present, ignore UUID filters and keep
+      // "books without attributes" semantics deterministic.
+      if (hasUuidFilters) {
+        console.debug("[books.getBooks] mixed filter received; preferring 'none' semantics");
+      }
       const rows = await query<{ uuid: string; attr_count: number }>(
         `select b.uuid, count(ba.id) as attr_count
          from books b
@@ -112,32 +118,30 @@ export class BookRepository implements Book {
     const now = new Date().toISOString();
     const bookUuid = book.uuid || crypto.randomUUID();
 
-    const existing = await queryOne<{ uuid: string }>(
-      `select uuid from books where uuid = ?`,
-      [bookUuid]
+    await execute(
+      `insert into books (uuid, title, firestore_id, created_at, updated_at)
+       values (?, ?, ?, ?, ?)
+       on conflict(uuid) do update set
+         title = excluded.title,
+         firestore_id = excluded.firestore_id,
+         updated_at = excluded.updated_at`,
+      [bookUuid, book.title, book.firestore_id ?? null, now, now]
     );
-
-    if (existing) {
-      await execute(
-        `update books set title = ?, firestore_id = ?, updated_at = ? where uuid = ?`,
-        [book.title, book.firestore_id ?? null, now, bookUuid]
-      );
-    } else {
-      await execute(
-        `insert into books (uuid, title, firestore_id, created_at, updated_at) values (?, ?, ?, ?, ?)`,
-        [bookUuid, book.title, book.firestore_id ?? null, now, now]
-      );
-    }
 
     const savedBook = await queryOne<Books>(
       `select id, uuid, title, firestore_id, created_at, updated_at, deleted_at from books where uuid = ?`,
       [bookUuid]
     );
 
-    return savedBook as Books;
+    if (!savedBook) {
+      throw new Error(`Book ${bookUuid} not found after upsert`);
+    }
+    return savedBook;
   }
 
   async deleteBook(id: string): Promise<void> {
+    if (!uuid.pattern.test(id)) return;
+
     await withTransaction(async (db) => {
       const linkedRows = await db.query<{ link_id: string | null }>(
         `select link_id from contents where book_id = ?`,
