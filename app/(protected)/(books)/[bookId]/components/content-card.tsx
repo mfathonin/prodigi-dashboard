@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MenuItems } from "@/components/ui/menu-items";
 import { constants } from "@/lib/constants";
-import { downloadQRCodes, getLinks } from "@/lib/utils";
+import { downloadQRCodes } from "@/lib/qr-download";
+import { getLinks } from "@/lib/utils";
 import {
   BookContentsLink,
   Books,

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { constants } from "@/lib/constants";
-import { downloadQRCodes } from "@/lib/utils";
+import { downloadQRCodes } from "@/lib/qr-download";
 import { BooksContentsCount, ContentUpdateForm } from "@/models";
 
 import { useDialog } from "../dialog/provider";
