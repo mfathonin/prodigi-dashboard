@@ -3,8 +3,6 @@ const { randomUUID, scryptSync, randomBytes } = require("crypto");
 
 const EMAILS_ENV = "SEED_ADMIN_EMAILS";
 const PASSWORD_ENV = "SEED_ADMIN_PASSWORD";
-const LEGACY_EMAILS_ENV = "DEV_ADMIN_EMAILS";
-const LEGACY_PASSWORD_ENV = "DEV_ADMIN_PASSWORD";
 
 function hashPassword(password) {
   const salt = randomBytes(16).toString("hex");
@@ -26,18 +24,18 @@ function isValidEmail(email) {
 }
 
 function getSeedConfig() {
-  const rawEmails = process.env[EMAILS_ENV] || process.env[LEGACY_EMAILS_ENV] || "";
-  const password = process.env[PASSWORD_ENV] || process.env[LEGACY_PASSWORD_ENV] || "";
+  const rawEmails = process.env[EMAILS_ENV] || "";
+  const password = process.env[PASSWORD_ENV] || "";
 
   if (!rawEmails) {
     throw new Error(
-      `Missing admin email list. Set ${EMAILS_ENV} (or legacy ${LEGACY_EMAILS_ENV}) in your env file.`
+      `Missing admin email list. Set ${EMAILS_ENV} in your env file.`
     );
   }
 
   if (!password) {
     throw new Error(
-      `Missing admin password. Set ${PASSWORD_ENV} (or legacy ${LEGACY_PASSWORD_ENV}) in your env file.`
+      `Missing admin password. Set ${PASSWORD_ENV} in your env file.`
     );
   }
 
