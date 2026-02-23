@@ -1,4 +1,4 @@
-import { User } from "@supabase/supabase-js";
+import { SessionUser } from "@/lib/auth/types";
 import { z } from "zod";
 
 export const loginSchema = z.object({
@@ -41,6 +41,6 @@ interface UserRole {
   role: string;
 }
 
-export interface ExtendedUser extends User {
+export interface ExtendedUser extends SessionUser {
   user_roles?: UserRole[];
 }

@@ -1,10 +1,8 @@
 import { ApiResponseHandler } from "@/lib/api-response";
 import { constants } from "@/lib/constants";
-import { createClient } from "@/lib/supaclient/server";
 import { CollectionLinkResponse } from "@/models";
 import { BookRepository } from "@/repositories/books";
 import { ContentsRepository } from "@/repositories/contents";
-import type { PostgrestError } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 
 const {
@@ -20,7 +18,6 @@ export async function GET(
   { params }: { params: { paths: string[] } }
 ) {
   const searchParams = request.nextUrl.searchParams;
-  const supabase = createClient();
   const linkPath = params.paths?.[0];
   const appSignature = searchParams.get("app");
 
@@ -29,12 +26,11 @@ export async function GET(
     return ApiResponseHandler.error(LINK_MISSING_SIGNATURE);
   if (!linkPath) return ApiResponseHandler.error(LINK_PATH_REQUIRED);
 
-  const bookRepo = new BookRepository(supabase);
-  const contentRepo = new ContentsRepository(supabase);
+  const bookRepo = new BookRepository(null);
+  const contentRepo = new ContentsRepository(null);
 
   try {
-    const { book_id, firestore_id, link, ...contentData } =
-      await contentRepo.getContentByLink(linkPath);
+    const { book_id, link, ...contentData } = await contentRepo.getContentByLink(linkPath);
     const collection = await bookRepo.getBook(book_id);
 
     if (!link) return ApiResponseHandler.error(LINK_NOT_FOUND);
@@ -59,14 +55,11 @@ export async function GET(
       },
     } satisfies CollectionLinkResponse);
   } catch (error) {
-    console.error(
-      1349,
-      "contentRepo.getContentByLink",
-      { path: linkPath },
-      error
-    );
-    if ((error as PostgrestError).code === "PGRST116")
+    console.error(1349, "contentRepo.getContentByLink", { path: linkPath }, error);
+    const message = error instanceof Error ? error.message : "";
+    if (message.toLowerCase().includes("not found")) {
       return ApiResponseHandler.error(LINK_NOT_FOUND);
+    }
     return ApiResponseHandler.error(UNKNOWN);
   }
 }

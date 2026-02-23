@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supaclient/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,7 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ErrorWrapper } from "@/components/ui/error-wrapper";
-import { User } from "@supabase/supabase-js";
 
 const setPasswordSchema = z
   .object({
@@ -35,9 +32,9 @@ type SetPasswordForm = z.infer<typeof setPasswordSchema>;
 export default function SetPasswordPage() {
   const [errorMessage, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const token = useMemo(() => searchParams.get("token"), [searchParams]);
 
   const form = useForm<SetPasswordForm>({
     resolver: zodResolver(setPasswordSchema),
@@ -47,53 +44,28 @@ export default function SetPasswordPage() {
     },
   });
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.hash.substring(1));
-    const refreshToken = urlParams.get("refresh_token");
-    if (!refreshToken) {
-      toast.error("Token tidak valid atau tidak ada");
-      return router.push("/");
+  const onSubmit = async (values: SetPasswordForm) => {
+    if (!token) {
+      setError("Token tidak valid atau tidak ada");
+      return;
     }
 
-    const refreshSession = async () => {
-      const supabase = createClient();
-      const {
-        error,
-        data: { user },
-      } = await supabase.auth.refreshSession({
-        refresh_token: refreshToken,
-      });
-      if (error) {
-        setError("Gagal memperbarui sesi: " + error.message);
-      }
-      return user;
-    };
-    refreshSession()
-      .then((user) => {
-        if (user) {
-          setUser(user);
-        }
-      })
-      .catch((error) => {
-        setError("Gagal memperbarui sesi: " + error.message);
-      });
-  }, [searchParams, router]);
-
-  const onSubmit = async (values: SetPasswordForm) => {
-    const supabase = createClient();
-
-    const { error } = await supabase.auth.updateUser({
-      password: values.password,
+    const response = await fetch("/api/auth/set-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password: values.password }),
     });
 
-    if (error) {
-      setError("Gagal membuat password: " + error.message);
+    const result = await response.json();
+    if (!response.ok) {
+      setError(result.error || "Gagal membuat password");
       setSuccessMessage(null);
-    } else {
-      setSuccessMessage("Password berhasil dibuat");
-      setError(null);
-      router.push("/");
+      return;
     }
+
+    setSuccessMessage("Password berhasil dibuat");
+    setError(null);
+    router.push("/books");
   };
 
   return (
@@ -117,16 +89,6 @@ export default function SetPasswordPage() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="w-auto text-start flex flex-col gap-y-3"
         >
-          {user && (
-            <div className="flex flex-col gap-y-1 mb-4">
-              <p className="w-full text-center text-opacity-40 text-sm">
-                Atur password untuk akun
-              </p>
-              <p className="text-center font-thin text-opacity-40 text-sm">
-                {user.email}
-              </p>
-            </div>
-          )}
           <FormField
             control={form.control}
             name="password"
@@ -161,7 +123,7 @@ export default function SetPasswordPage() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full mt-4" disabled={!user}>
+          <Button type="submit" className="w-full mt-4" disabled={!token}>
             Buat Password
           </Button>
         </form>

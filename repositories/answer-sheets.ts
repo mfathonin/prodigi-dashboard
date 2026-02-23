@@ -1,7 +1,6 @@
-import { Database, Tables } from "@/models/supaservice.types";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { constants } from "@/lib/constants";
 import { AnswerSheet } from "@/models";
+import { execute, queryOne } from "@/lib/db/utils";
 
 const { MIN_OPTIONS, MAX_OPTIONS } = constants.quizConfig;
 
@@ -38,35 +37,49 @@ interface AnswerSheets {
   ) => Promise<void>;
 }
 
-export class AnswerSheetRepository implements AnswerSheets {
-  private db: SupabaseClient<Database>;
+function parseNumArray(v: unknown): number[] {
+  if (Array.isArray(v)) return v as number[];
+  try {
+    return JSON.parse(String(v || "[]"));
+  } catch {
+    return [];
+  }
+}
 
-  constructor(supabase: SupabaseClient<Database>) {
-    this.db = supabase;
+function parseAnswerArray(v: unknown): (number | number[])[] {
+  if (Array.isArray(v)) return v as (number | number[])[];
+  try {
+    return JSON.parse(String(v || "[]"));
+  } catch {
+    return [];
+  }
+}
+
+export class AnswerSheetRepository implements AnswerSheets {
+  constructor(_supabase: any) {}
+
+  private toAnswerSheet(row: any): AnswerSheet {
+    return {
+      ...row,
+      counts: Number(row.counts),
+      n_options: parseNumArray(row.n_options),
+      points: parseNumArray(row.points),
+      answers: parseAnswerArray(row.answers) as any,
+    } as AnswerSheet;
   }
 
-  /**
-   * Validates an answer against the number of options
-   * @param answer The answer to validate (single number or array of numbers)
-   * @param nOptions The number of options available for this question
-   * @returns The validated answer (corrected if needed)
-   */
   private validateAnswer = (
     answer: number | number[],
     nOptions: number
   ): number | number[] => {
-    // For single answer
     if (!Array.isArray(answer)) {
       return answer >= 0 && answer < nOptions ? answer : 0;
     }
 
-    // For array answers
-    // Filter valid options and ensure uniqueness
     const validOptions = [...new Set(answer)].filter(
       (opt) => opt >= 0 && opt < nOptions
     );
 
-    // Return [0] if no valid options or empty array
     return validOptions.length > 0 ? validOptions : [0];
   };
 
@@ -81,7 +94,6 @@ export class AnswerSheetRepository implements AnswerSheets {
       Array.isArray(baseValue) ? [...baseValue] : (baseValue as number)
     ) as T[];
 
-    // Copy existing values up to the new count
     if (!newValue) {
       for (let i = 0; i < Math.min(newCount, oldCount); i++) {
         newArray[i] = oldValue[i];
@@ -94,21 +106,14 @@ export class AnswerSheetRepository implements AnswerSheets {
   getAnswerSheetById = async (
     answerSheetId: string
   ): Promise<AnswerSheet | null> => {
-    const { data, error } = await this.db
-      .from("answer_sheets")
-      .select("*")
-      .eq("uuid", answerSheetId)
-      .single();
+    const row = await queryOne<any>(
+      `select * from answer_sheets where uuid = ? limit 1`,
+      [answerSheetId]
+    );
 
-    if (error) {
-      console.error(`Error fetching answer sheet ${answerSheetId}:`, error);
+    if (!row) return null;
 
-      if (error.code === "PGRST116") return null;
-
-      throw { message: "Failed to fetch answer sheet", error };
-    }
-
-    return data as AnswerSheet;
+    return this.toAnswerSheet(row);
   };
 
   resetAnswerSheetConfig = async (
@@ -150,24 +155,23 @@ export class AnswerSheetRepository implements AnswerSheets {
       oldCounts
     );
 
-    // Validate each answer using the validator function
     newAnswers = newAnswers.map((answer, index) =>
       this.validateAnswer(answer, newNOptions[index])
     );
 
-    // update answer_sheets
-    const { error: updateError } = await this.db
-      .from("answer_sheets")
-      .update({
+    await execute(
+      `update answer_sheets
+       set counts = ?, n_options = ?, points = ?, answers = ?, updated_at = ?
+       where uuid = ?`,
+      [
         counts,
-        n_options: newNOptions,
-        points: newPoints,
-        answers: newAnswers,
-      })
-      .eq("uuid", answerSheetId);
-
-    if (updateError)
-      throw { message: "Gagal mengupdate data", error: updateError };
+        JSON.stringify(newNOptions),
+        JSON.stringify(newPoints),
+        JSON.stringify(newAnswers),
+        new Date().toISOString(),
+        answerSheetId,
+      ]
+    );
   };
 
   updateNOption = async (
@@ -191,7 +195,6 @@ export class AnswerSheetRepository implements AnswerSheets {
       Math.min(MAX_OPTIONS, newNOptions[index])
     );
 
-    // Validate answer is in range using the validator function
     const existingAnswers = existingData.answers as (number | number[])[];
     const updatedAnswers = [...existingAnswers];
     updatedAnswers[index] = this.validateAnswer(
@@ -199,13 +202,15 @@ export class AnswerSheetRepository implements AnswerSheets {
       newNOptions[index]
     );
 
-    const { error: updateError } = await this.db
-      .from("answer_sheets")
-      .update({ n_options: newNOptions, answers: updatedAnswers })
-      .eq("uuid", answerSheetId);
-
-    if (updateError)
-      throw { message: "Gagal mengupdate data", error: updateError };
+    await execute(
+      `update answer_sheets set n_options = ?, answers = ?, updated_at = ? where uuid = ?`,
+      [
+        JSON.stringify(newNOptions),
+        JSON.stringify(updatedAnswers),
+        new Date().toISOString(),
+        answerSheetId,
+      ]
+    );
   };
 
   updatePoints = async (
@@ -224,13 +229,10 @@ export class AnswerSheetRepository implements AnswerSheets {
     newPoints[index] =
       type === "increase" ? newPoints[index] + 1 : newPoints[index] - 1;
 
-    const { error: updateError } = await this.db
-      .from("answer_sheets")
-      .update({ points: newPoints })
-      .eq("uuid", answerSheetId);
-
-    if (updateError)
-      throw { message: "Gagal mengupdate data", error: updateError };
+    await execute(
+      `update answer_sheets set points = ?, updated_at = ? where uuid = ?`,
+      [JSON.stringify(newPoints), new Date().toISOString(), answerSheetId]
+    );
   };
 
   updateAnswers = async (
@@ -243,30 +245,24 @@ export class AnswerSheetRepository implements AnswerSheets {
     if (answers.length !== existingData.counts)
       throw { message: "Invalid answers array length" };
 
-    // Validate all answers using the validator function
     const validatedAnswers = answers.map((answer, index) =>
       this.validateAnswer(answer, existingData.n_options[index])
     );
 
-    // Check if any answer was invalid and needed correction
     const hasInvalidAnswers = validatedAnswers.some((validAnswer, index) => {
       const originalAnswer = answers[index];
 
-      // For single answers
       if (!Array.isArray(originalAnswer) && !Array.isArray(validAnswer)) {
         return originalAnswer !== validAnswer;
       }
 
-      // For array answers
       if (Array.isArray(originalAnswer) && Array.isArray(validAnswer)) {
-        // Check if arrays have different lengths or different content
         return (
           originalAnswer.length !== validAnswer.length ||
           !originalAnswer.every((val) => validAnswer.includes(val))
         );
       }
 
-      // Type mismatch (shouldn't happen in normal operation)
       return true;
     });
 
@@ -274,12 +270,10 @@ export class AnswerSheetRepository implements AnswerSheets {
       throw { message: "Invalid answer values" };
     }
 
-    const { error } = await this.db
-      .from("answer_sheets")
-      .update({ answers })
-      .eq("uuid", answerSheetId);
-
-    if (error) throw { message: "Gagal mengupdate data", error };
+    await execute(
+      `update answer_sheets set answers = ?, updated_at = ? where uuid = ?`,
+      [JSON.stringify(answers), new Date().toISOString(), answerSheetId]
+    );
   };
 
   recreateAnswerSheet = async (
@@ -294,15 +288,43 @@ export class AnswerSheetRepository implements AnswerSheets {
     if (nOption < MIN_OPTIONS || nOption > MAX_OPTIONS)
       throw { message: "Invalid nOption value" };
 
-    const { error } = await this.db.from("answer_sheets").upsert({
-      uuid: answerSheetId,
-      book_id: bookId,
-      counts,
-      n_options: Array(counts).fill(nOption),
-      points: Array(counts).fill(points),
-      answers: Array(counts).fill(0),
-    });
+    const now = new Date().toISOString();
+    const existing = await queryOne<{ uuid: string }>(
+      `select uuid from answer_sheets where uuid = ?`,
+      [answerSheetId]
+    );
 
-    if (error) throw { message: "Gagal membuat data", error };
+    if (existing) {
+      await execute(
+        `update answer_sheets
+         set book_id = ?, counts = ?, n_options = ?, points = ?, answers = ?, updated_at = ?
+         where uuid = ?`,
+        [
+          bookId,
+          counts,
+          JSON.stringify(Array(counts).fill(nOption)),
+          JSON.stringify(Array(counts).fill(points)),
+          JSON.stringify(Array(counts).fill(0)),
+          now,
+          answerSheetId,
+        ]
+      );
+    } else {
+      await execute(
+        `insert into answer_sheets
+         (uuid, book_id, counts, n_options, points, answers, created_at, updated_at)
+         values (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          answerSheetId,
+          bookId,
+          counts,
+          JSON.stringify(Array(counts).fill(nOption)),
+          JSON.stringify(Array(counts).fill(points)),
+          JSON.stringify(Array(counts).fill(0)),
+          now,
+          now,
+        ]
+      );
+    }
   };
 }

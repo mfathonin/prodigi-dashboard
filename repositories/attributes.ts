@@ -1,5 +1,5 @@
-import { Database, Tables } from "@/models";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { Tables } from "@/models";
+import { execute, query, queryOne } from "@/lib/db/utils";
 
 type BooksAttritbutes = Tables<"attributes">;
 type AttributesList = { [key: string]: { uuid: string; value: string }[] };
@@ -14,38 +14,32 @@ interface Attributes {
 }
 
 export class AttributesRepository implements Attributes {
-  _db: SupabaseClient<Database>;
+  _db: any;
 
   constructor(db: any) {
     this._db = db;
   }
 
   async getBookAttributes(bookId: string) {
-    const response = await this._db
-      .from("books_attributes")
-      .select("attributes(id, uuid, key, value)")
-      .eq("book_id", bookId);
-    if (response.error) {
-      throw response.error;
-    }
+    const rows = await query<BooksAttritbutes>(
+      `select a.id, a.uuid, a.key, a.value
+       from books_attributes ba
+       join attributes a on a.uuid = ba.attribute_id
+       where ba.book_id = ?`,
+      [bookId]
+    );
 
-    const attributes = response.data.reduce((acc: BooksAttritbutes[], curr) => {
-      if (curr.attributes != null) acc.push(curr.attributes);
-      return acc;
-    }, []);
-
-    return attributes
+    return rows
       .sort((a, b) => a.key.localeCompare(b.key))
       .sort((a, b) => a.value.localeCompare(b.value));
   }
 
   async getAttributes(): Promise<AttributesList> {
-    const response = await this._db
-      .from("attributes")
-      .select("key, value, uuid");
-    if (response.error) throw response.error;
+    const rows = await query<{ key: string; value: string; uuid: string }>(
+      `select key, value, uuid from attributes`
+    );
 
-    const attributes = response.data.reduce((acc: AttributesList, curr) => {
+    const attributes = rows.reduce((acc: AttributesList, curr) => {
       if (curr.key != null && curr.value != null) {
         if (acc[curr.key] == null)
           acc[curr.key] = [] as { uuid: string; value: string }[];
@@ -58,45 +52,47 @@ export class AttributesRepository implements Attributes {
   }
 
   async addBookAttributes(bookId: string, attributes: string[]) {
-    const data = attributes.map((uuid) => ({
-      book_id: bookId,
-      attribute_id: uuid,
-    }));
-    const response = await this._db.from("books_attributes").insert(data);
-    if (response.error) throw response.error;
+    for (const attributeId of attributes) {
+      await execute(
+        `insert into books_attributes (book_id, attribute_id) values (?, ?)`,
+        [bookId, attributeId]
+      );
+    }
   }
 
   async removeBookAttributes(bookId: string, attributes: string[]) {
-    const response = await this._db
-      .from("books_attributes")
-      .delete()
-      .eq("book_id", bookId)
-      .in("attribute_id", attributes);
-    if (response.error) throw response.error;
+    if (attributes.length === 0) return;
+    await execute(
+      `delete from books_attributes
+       where book_id = ? and attribute_id in (${attributes
+         .map(() => "?")
+         .join(",")})`,
+      [bookId, ...attributes]
+    );
   }
 
   async addAttribute(key: string, value: string) {
-    const response = await this._db
-      .from("attributes")
-      .insert({ key, value })
-      .select();
-    if (response.error) throw response.error;
-    return response.data[0];
+    const uuid = crypto.randomUUID();
+    await execute(`insert into attributes (uuid, key, value) values (?, ?, ?)`, [
+      uuid,
+      key,
+      value,
+    ]);
+    return queryOne<BooksAttritbutes>(
+      `select id, uuid, key, value from attributes where uuid = ?`,
+      [uuid]
+    );
   }
 
   async deleteAttribute(uuid: string) {
-    const response = await this._db
-      .from("attributes")
-      .delete()
-      .eq("uuid", uuid);
-    if (response.error) throw response.error;
+    await execute(`delete from attributes where uuid = ?`, [uuid]);
   }
 
   async updateAttribute(uuid: string, key: string, value: string) {
-    const response = await this._db
-      .from("attributes")
-      .update({ key, value })
-      .eq("uuid", uuid);
-    if (response.error) throw response.error;
+    await execute(`update attributes set key = ?, value = ? where uuid = ?`, [
+      key,
+      value,
+      uuid,
+    ]);
   }
 }

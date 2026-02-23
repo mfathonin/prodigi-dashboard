@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
 import { constants } from "@/lib/constants";
-import { createClient } from "@/lib/supaclient/server";
 import { BookRepository } from "@/repositories/books";
 import { ContentsRepository } from "@/repositories/contents";
 
@@ -25,14 +24,27 @@ export default async function BookContentPage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const bookId = params.bookId;
+  const isBooksLanding = bookId === "books";
   const isValidBookId = !!bookId && uuid.pattern.test(bookId);
 
-  if (!isValidBookId) return notFound();
+  if (!isValidBookId && !isBooksLanding) return notFound();
 
-  const supabase = createClient();
-  const bookRepo = new BookRepository(supabase);
-  const contentRepo = new ContentsRepository(supabase);
-  const attributeRepo = new AttributesRepository(supabase);
+  if (isBooksLanding) {
+    return (
+      <DialogProvider>
+        <div className="h-full flex flex-col items-center justify-center gap-2 text-center">
+          <h4 className="h4 font-semibold">Pilih buku dari daftar</h4>
+          <p className="text-sm opacity-70">
+            Atau tambahkan buku baru untuk mulai mengelola konten digital.
+          </p>
+        </div>
+      </DialogProvider>
+    );
+  }
+
+  const bookRepo = new BookRepository(null);
+  const contentRepo = new ContentsRepository(null);
+  const attributeRepo = new AttributesRepository(null);
 
   const [book, contents, attributes] = await Promise.all([
     bookRepo.getBook(bookId),

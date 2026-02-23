@@ -11,11 +11,18 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "images.unsplash.com", // for testing
+        protocol: "http",
+        hostname: "localhost",
+        port: "3013",
       },
       {
-        hostname: "*.supabase.co",
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "3013",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
       },
     ],
   },

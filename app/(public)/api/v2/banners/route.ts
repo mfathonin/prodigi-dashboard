@@ -1,22 +1,17 @@
 import { ApiResponseHandler } from "@/lib/api-response";
-import { constants } from "@/lib/constants";
-import { createClient } from "@/lib/supaclient/server";
-import { NextRequest, NextResponse } from "next/server";
+import { query } from "@/lib/db/utils";
 
-const {
-  errors: {
-    general: { UNKNOWN },
-  },
-} = constants;
-export async function GET(request: NextRequest) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("banner")
-    .select("uuid,image,url");
-
-  if (error) {
-    return ApiResponseHandler.error({ ...UNKNOWN, message: error.message });
+export async function GET() {
+  try {
+    const data = await query<{ uuid: string; image: string; url: string }>(
+      `select uuid,image,url from banner`
+    );
+    return ApiResponseHandler.success(data);
+  } catch (error) {
+    return ApiResponseHandler.error({
+      code: "UNKNOWN",
+      message: error instanceof Error ? error.message : "Unknown error",
+      status: 500,
+    });
   }
-
-  return ApiResponseHandler.success(data);
 }

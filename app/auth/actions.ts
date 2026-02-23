@@ -1,37 +1,39 @@
 "use server";
 
 import { constants } from "@/lib/constants";
-import { createClient } from "@/lib/supaclient/server";
+import {
+  requestPasswordReset,
+  signInWithPassword,
+  signOut,
+  updatePasswordForCurrentUser,
+} from "@/lib/auth/service";
 import { ServerActionResult } from "@/models/results";
-import { AuthError, User } from "@supabase/supabase-js";
+import { AppUser } from "@/lib/auth/types";
+import { sendPasswordResetEmail } from "@/lib/email";
+import { getServerAppBaseUrl } from "@/lib/url";
 
 const errors = constants.errors.auth;
+const AUTH_ERROR_MESSAGES = new Set(["Invalid credentials", "Unauthorized"]);
 
 export const handleSignIn = async (
   email: string,
   password: string
-): Promise<ServerActionResult<User>> => {
-  const supabase = createClient();
+): Promise<ServerActionResult<AppUser>> => {
 
   try {
-    const { error, data } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error, user } = await signInWithPassword(email, password);
 
     if (error) throw error;
 
-    return { data: data.user, error: null };
+    return { data: user, error: null };
   } catch (error) {
     return handleError(error);
   }
 };
 
 export const handleSingOut = async (): Promise<ServerActionResult<string>> => {
-  const supabase = createClient();
-
   try {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await signOut();
 
     if (error) throw error;
 
@@ -44,18 +46,14 @@ export const handleSingOut = async (): Promise<ServerActionResult<string>> => {
 export const handleResetPassword = async (
   email: string
 ): Promise<ServerActionResult<string>> => {
-  const supabase = createClient();
-
   try {
-    const redirectTo = `${process.env.NEXT_PUBLIC_LINKS_APP}/auth/update-password`;
-    console.log(redirectTo);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo,
-    });
+    const { token } = await requestPasswordReset(email);
+    if (!token) return { data: "If account exists, reset is available", error: null };
 
-    if (error) throw error;
-
-    return { data: "Password reset email sent", error: null };
+    const resetUrl = `${getServerAppBaseUrl()}/auth/update-password?token=${token}`;
+    await sendPasswordResetEmail(email, resetUrl);
+    console.info("Password reset email sent", { email });
+    return { data: "If account exists, reset is available", error: null };
   } catch (error) {
     return handleError(error);
   }
@@ -64,12 +62,8 @@ export const handleResetPassword = async (
 export const handleUpdatePassword = async (
   newPassword: string
 ): Promise<ServerActionResult<string>> => {
-  const supabase = createClient();
-
   try {
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-    if (error) throw error;
+    await updatePasswordForCurrentUser(newPassword);
 
     return { data: "Password updated successfully", error: null };
   } catch (error) {
@@ -78,14 +72,20 @@ export const handleUpdatePassword = async (
 };
 
 const handleError = (error: unknown) => {
-  if (error instanceof AuthError && error.status)
+  if (error instanceof Error) {
+    if (AUTH_ERROR_MESSAGES.has(error.message)) {
+      return { data: null, error: { status: 401, message: error.message } };
+    }
+
+    console.error("[auth/actions] unexpected error:", error);
     return {
       data: null,
       error: {
-        status: error.status,
-        message: error.message ?? errors.INVALID_CREDENTIALS,
+        status: 500,
+        message: errors.UNKNOWN,
       },
     };
+  }
 
   return {
     data: null,

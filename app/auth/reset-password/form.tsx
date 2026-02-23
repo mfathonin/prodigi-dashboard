@@ -37,7 +37,7 @@ export default function ResetPasswordForm() {
   });
 
   const onSubmit = async (values: ResetPasswordForm) => {
-    const { data, error } = await handleResetPassword(values.email);
+    const { error } = await handleResetPassword(values.email);
 
     if (error) {
       setError(error.message);

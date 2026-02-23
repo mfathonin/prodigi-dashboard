@@ -2,7 +2,6 @@ import { z } from "zod";
 
 import { ApiResponseHandler } from "@/lib/api-response";
 import { constants } from "@/lib/constants";
-import { createAdminClient } from "@/lib/supaclient/admin";
 import { AnswerSheetRepository } from "@/repositories/answer-sheets";
 import { BookRepository } from "@/repositories/books";
 import { ContentsRepository } from "@/repositories/contents";
@@ -41,8 +40,7 @@ export async function POST(
   request: Request,
   { params }: { params: { uuid: string[] } }
 ) {
-  const supabase = await createAdminClient();
-  const answerSheetRepo = new AnswerSheetRepository(supabase);
+  const answerSheetRepo = new AnswerSheetRepository(null);
 
   const uuid = params.uuid[0];
   if (!uuidValidation.pattern.test(uuid))
@@ -148,8 +146,7 @@ export async function GET(
   const isValidId = uuidValidation.pattern.test(id);
   if (!isValidId) return ApiResponseHandler.error(INVALID_UUID);
 
-  const supabase = await createAdminClient();
-  const repo = new AnswerSheetRepository(supabase);
+  const repo = new AnswerSheetRepository(null);
 
   try {
     const result = await repo.getAnswerSheetById(id);
@@ -157,8 +154,8 @@ export async function GET(
 
     const { answers, created_at, updated_at, ...answerSheets } = result;
 
-    const contentRepo = new ContentsRepository(supabase);
-    const bookRepo = new BookRepository(supabase);
+    const contentRepo = new ContentsRepository(null);
+    const bookRepo = new BookRepository(null);
 
     const [bookPromise, contentPromise] = await Promise.allSettled([
       bookRepo.getBook(answerSheets.book_id),

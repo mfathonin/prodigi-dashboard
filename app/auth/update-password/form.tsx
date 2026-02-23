@@ -11,11 +11,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supaclient/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { handleUpdatePassword } from "../actions";
@@ -32,11 +30,26 @@ const updatePasswordSchema = z
 
 type UpdatePasswordForm = z.infer<typeof updatePasswordSchema>;
 
-export default function UpdatePasswordForm() {
+type UpdatePasswordFormProps = {
+  initialToken?: string | null;
+};
+
+export default function UpdatePasswordForm({ initialToken = null }: UpdatePasswordFormProps) {
   const [errorMessage, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const token = useMemo(
+    () =>
+      initialToken ??
+      searchParams.get("token") ??
+      searchParams.get("token_hash") ??
+      searchParams.get("code"),
+    [initialToken, searchParams]
+  );
+  const isTokenMode = Boolean(token);
 
   const form = useForm<UpdatePasswordForm>({
     resolver: zodResolver(updatePasswordSchema),
@@ -47,6 +60,26 @@ export default function UpdatePasswordForm() {
   });
 
   const onSubmit = async (values: UpdatePasswordForm) => {
+    if (isTokenMode) {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: values.password }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || "Invalid reset token");
+        setSuccessMessage(null);
+        return;
+      }
+
+      setSuccessMessage("Password updated successfully.");
+      setError(null);
+      router.push("/books");
+      return;
+    }
+
     const { error: updateError } = await handleUpdatePassword(values.password);
 
     if (updateError) {
@@ -55,54 +88,27 @@ export default function UpdatePasswordForm() {
     } else {
       setSuccessMessage("Password updated successfully.");
       setError(null);
-      router.push("/");
+      router.push("/books");
     }
   };
 
   useEffect(() => {
-    const init = async () => {
-      const supabase = createClient();
+    if (isTokenMode) {
+      setUserEmail("Password reset via email link");
+      return;
+    }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        // get auth session and refresh token from cookies in client component
-        const accessToken = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("sb-access-token="))
-          ?.split("=")[1];
-        const refreshToken = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("sb-refresh-token="))
-          ?.split("=")[1];
-        if (accessToken && refreshToken) {
-          const {
-            data: { user },
-            error: newSessionError,
-          } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (user) {
-            return setUser(user);
-          }
-
-          if (newSessionError) {
-            console.log(newSessionError);
-            setError("Gagal memperbarui sesi: " + newSessionError.message);
-          }
-        } else {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.user) {
           setError("Gagal memperbarui sesi: tidak ada valid token");
+        } else {
+          setUserEmail(data.user.email);
         }
-      } else {
-        setUser(user);
-      }
-    };
-    init();
-  }, []);
+      })
+      .catch(() => setError("Gagal memperbarui sesi"));
+  }, [isTokenMode]);
 
   return (
     <>
@@ -125,13 +131,13 @@ export default function UpdatePasswordForm() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="w-auto text-start flex flex-col gap-y-3"
         >
-          {user && (
+          {userEmail && (
             <div className="flex flex-col gap-y-1 mb-4">
               <p className="w-full text-center text-opacity-40 text-sm">
                 Update password untuk akun
               </p>
               <p className="text-center font-thin text-opacity-40 text-sm">
-                {user.email}
+                {userEmail}
               </p>
             </div>
           )}
@@ -169,7 +175,11 @@ export default function UpdatePasswordForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full mt-4" disabled={!user}>
+          <Button
+            type="submit"
+            className="w-full mt-4"
+            disabled={!isTokenMode && !userEmail}
+          >
             Ubah Password
           </Button>
         </form>

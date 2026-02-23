@@ -18,34 +18,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MenuItems } from "@/components/ui/menu-items";
+import { AppUser } from "@/lib/auth/types";
 import { deleteUser } from "@/lib/auth-helpers";
-import { createClient } from "@/lib/supaclient/client";
-import { User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 type UserActionsProps = {
-  user: User;
+  user: AppUser;
 };
 
 export const UserActions = ({ user }: UserActionsProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
 
   useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("Error getting user:", error);
-        toast.error("Failed to get user", {
-          description: "Failed to get user",
-        });
-      } else {
-        setCurrentUser(data.user);
-      }
-    };
-    getUser();
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => setCurrentUser(data.user ?? null))
+      .catch(() => null);
   }, []);
 
   const handleResetPassword = async () => {
@@ -57,7 +47,7 @@ export const UserActions = ({ user }: UserActionsProps) => {
       });
     } else {
       toast.success("Reset password email sent", {
-        description: `An email has been sent to ${user.email}`,
+        description: `If the account exists, an email was sent to ${user.email}`,
       });
     }
   };

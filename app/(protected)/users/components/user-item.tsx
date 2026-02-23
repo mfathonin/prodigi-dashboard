@@ -1,8 +1,8 @@
-import { User } from "@supabase/supabase-js";
+import { AppUser } from "@/lib/auth/types";
 import { formatDistanceToNow } from "date-fns";
 
 type UserItemProps = {
-  user: User;
+  user: AppUser;
 };
 
 export const UserItem = ({ user }: UserItemProps) => {

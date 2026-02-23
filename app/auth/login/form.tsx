@@ -30,12 +30,14 @@ export default function LoginForm() {
   });
 
   const onLoginSubmit = async (values: Login) => {
-    const { data, error } = await handleSignIn(values.email, values.password);
+    const { error } = await handleSignIn(values.email, values.password);
 
     if (error) {
       setError(error.message);
       return;
     }
+
+    window.location.href = "/";
   };
 
   return (

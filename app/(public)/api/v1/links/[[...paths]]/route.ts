@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supaclient/server";
 import { CollectionLinkResponse } from "@/models";
+import { ContentsRepository } from "@/repositories/contents";
+import { BookRepository } from "@/repositories/books";
 import { NextRequest } from "next/server";
 
 export async function GET(
@@ -7,7 +8,6 @@ export async function GET(
   { params }: { params: { paths: string[] } }
 ) {
   const searchParams = request.nextUrl.searchParams;
-  const supabase = createClient();
   const linkPath = params.paths?.[0];
   const appSignature = searchParams.get("app");
 
@@ -15,61 +15,52 @@ export async function GET(
     return new Response("App signature is required", { status: 400 });
   if (!linkPath) return new Response("Link path is required", { status: 400 });
 
-  const { data: linkData, error: linkError } = await supabase
-    .from("link")
-    .select("*")
-    .eq("path", linkPath)
-    .limit(1)
-    .maybeSingle();
+  const contentRepo = new ContentsRepository(null);
+  const bookRepo = new BookRepository(null);
 
-  linkError && console.log(linkError);
-  if (linkError) return new Response("Error fetching link", { status: 500 });
+  try {
+    const { link, ...contentData } = await contentRepo.getContentByLink(linkPath);
+    if (!link) return new Response("Link not found", { status: 404 });
 
-  if (!linkData) return new Response("Link not found", { status: 404 });
+    const collection = await bookRepo.getBook(contentData.book_id);
+    if (!collection) return new Response("Books not found", { status: 404 });
 
-  const { data: contentData, error: contentError } = await supabase
-    .from("contents")
-    .select("*")
-    .eq("link_id", linkData.uuid)
-    .single();
+    const formattedLink = {
+      contents: [
+        {
+          id: contentData.id,
+          title: contentData.title,
+          type: contentData.type,
+          collectionId: contentData.book_id,
+          createdAt: contentData.created_at,
+          link: {
+            targetUrl: link.targetUrl,
+            url: link.path,
+          },
+          updatedAt: contentData.updated_at,
+          collection: {
+            id: collection.id,
+            name: collection.title,
+            createdAt: collection.created_at,
+            updatedAt: collection.updated_at,
+          },
+        } satisfies CollectionLinkResponse,
+      ],
+    };
 
-  contentError && console.log(contentError);
-  if (contentError)
-    return new Response("Error fetching content", { status: 500 });
-  if (!contentData) return new Response("Content not found", { status: 404 });
+    return new Response(JSON.stringify(formattedLink), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message === "Link not found" || message === "Content not found") {
+      return new Response("Link not found", { status: 404 });
+    }
 
-  const { data: collection, error: bookError } = await supabase
-    .from("books")
-    .select("id, name:title, createdAt:created_at, updatedAt:updated_at")
-    .eq("uuid", contentData.book_id)
-    .limit(1)
-    .maybeSingle();
-
-  if (bookError || !collection)
-    return new Response("Books not found", { status: 404 });
-
-  const formattedLink = {
-    contents: [
-      {
-        id: contentData.id,
-        title: contentData.title,
-        type: contentData.type,
-        collectionId: contentData.book_id,
-        createdAt: contentData.created_at,
-        link: {
-          targetUrl: linkData.target_url,
-          url: linkData.path,
-        },
-        updatedAt: contentData.updated_at,
-        collection,
-      } satisfies CollectionLinkResponse,
-    ],
-  };
-
-  return new Response(JSON.stringify(formattedLink), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+    console.error("[api/v1/links] failed:", error);
+    return new Response("Error fetching link", { status: 500 });
+  }
 }

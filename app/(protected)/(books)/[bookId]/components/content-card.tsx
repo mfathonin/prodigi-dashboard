@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MenuItems } from "@/components/ui/menu-items";
 import { constants } from "@/lib/constants";
-import { downloadQRCodes, getLinks } from "@/lib/utils";
+import { downloadQRCodes } from "@/lib/qr-download";
+import { getLinks } from "@/lib/utils";
 import {
   BookContentsLink,
   Books,
@@ -16,7 +17,6 @@ import {
   ContentUpdateForm,
   ExternalContentUpdateForm,
 } from "@/models";
-import { ContentsRepository } from "@/repositories/contents";
 import { useRouter } from "next/navigation";
 import { toCanvas } from "qrcode";
 import { useEffect, useRef } from "react";
@@ -72,11 +72,7 @@ export const ContentCard = ({
 
     dialog?.openDialog("alert", _content, async (result) => {
       if (typeof result === "boolean" && result) {
-        const supabase = (
-          await import("@/lib/supaclient/client")
-        ).createClient();
-
-        await new ContentsRepository(supabase).deleteContentsLink(content.uuid);
+        await fetch(`/api/contents/${content.uuid}`, { method: "DELETE" });
 
         router.refresh();
       }
@@ -97,14 +93,11 @@ export const ContentCard = ({
 
     dialog?.openDialog<ContentUpdateForm>("form", _content, async (result) => {
       if (result) {
-        const supabase = (
-          await import("@/lib/supaclient/client")
-        ).createClient();
-
-        // console.log("on update content link", { result });
-        await new ContentsRepository(supabase).upsertContentLink(
-          result as ExternalContentUpdateForm
-        );
+        await fetch(`/api/contents/${content.uuid}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result as ExternalContentUpdateForm),
+        });
 
         router.refresh();
       }
@@ -116,7 +109,16 @@ export const ContentCard = ({
       case "answer_sheet":
       case "exercise":
         if (link.targetUrl) {
-          const targetUrl = new URL(link.targetUrl);
+          let normalized = link.targetUrl;
+          if (normalized.startsWith("undefined/")) {
+            normalized = `/${normalized.replace(/^undefined\//, "")}`;
+          }
+          normalized = normalized.replace("/quize/", "/quiz/");
+
+          const targetUrl = normalized.startsWith("http")
+            ? new URL(normalized)
+            : new URL(normalized, window.location.origin);
+
           window.open(targetUrl.pathname, "_blank");
         }
         break;
@@ -138,7 +140,9 @@ export const ContentCard = ({
         <div className="flex flex-col w-full md:flex-row gap-x-10 gap-y-3">
           <div className="flex flex-col flex-1 gap-y-2">
             <div className="flex items-center gap-x-2">
-              <Badge variant={content.type}>{LABEL[content.type ?? 'content']}</Badge>
+              <Badge variant={content.type}>
+                {LABEL[(content.type ?? "content") as keyof typeof LABEL]}
+              </Badge>
               <p className="text-sm">{content.title}</p>
             </div>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 line-clamp-1">

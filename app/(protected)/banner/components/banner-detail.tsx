@@ -1,9 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supaclient/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,35 +10,21 @@ export const BannerDetail = ({
 }: {
   data: { uuid: string; image: string; url: string };
 }) => {
-  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const supabase = createClient();
 
     try {
-      // Extract filename from the image URL
-      const urlParts = data.image.split("/");
-      const fileName = urlParts[urlParts.length - 1];
+      const response = await fetch(`/api/banner/${data.uuid}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body.error || "Failed deleting banner");
+      }
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from("banner")
-        .remove([fileName]);
-
-      if (storageError) throw storageError;
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from("banner")
-        .delete()
-        .match({ uuid: data.uuid });
-
-      if (dbError) throw dbError;
-
-      // Refresh the page
-      router.refresh();
+      window.location.reload();
 
       toast.success("Banner Dihapus", {
         description: "Banner berhasil dihapus",

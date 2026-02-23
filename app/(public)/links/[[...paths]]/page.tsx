@@ -2,7 +2,6 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Metadata } from "next/types";
 
-import { createClient } from "@/lib/supaclient/server";
 import { BookContentsLink } from "@/models";
 import { ContentsRepository } from "@/repositories/contents";
 import { DownloadButton } from "@/components/ui/download-button";
@@ -28,8 +27,7 @@ export default async function LinkPage({
   if (appSignature === process.env.NEXT_PUBLIC_APP_ID) {
     redirect(`/api/v1/links/${linkPath}?app=${appSignature}`);
   }
-  const supabase = createClient();
-  const contentRepo = new ContentsRepository(supabase);
+  const contentRepo = new ContentsRepository(null);
 
   let contentWithLink: BookContentsLink;
   try {

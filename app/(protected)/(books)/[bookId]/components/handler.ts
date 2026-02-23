@@ -1,50 +1,45 @@
 import {
   ContentUpdateForm,
-  isExternalContent,
   isAnswerSheetContent,
-  validateExternalContent,
+  isExternalContent,
   validateAnswerSheetContent,
+  validateExternalContent,
 } from "@/models";
-import { ContentsRepository } from "@/repositories/contents";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supaclient/client";
 
-const addContent = async (
-  content: ContentUpdateForm,
-  supabase: SupabaseClient
-) => {
+const addContent = async (content: ContentUpdateForm) => {
   if (!isExternalContent(content)) {
     throw new Error("Invalid content type");
   }
   validateExternalContent(content);
 
-  await new ContentsRepository(supabase).upsertContentLink(content);
+  await fetch("/api/contents", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(content),
+  });
 };
 
-const addAnswerSheet = async (
-  content: ContentUpdateForm,
-  supabase: SupabaseClient
-) => {
+const addAnswerSheet = async (content: ContentUpdateForm) => {
   if (!isAnswerSheetContent(content)) {
     throw new Error("Invalid answer sheet content");
   }
   validateAnswerSheetContent(content);
 
-  await new ContentsRepository(supabase).upsertAnswerSheet(content);
+  await fetch("/api/contents", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(content),
+  });
 };
-
-const supabaseClient = createClient();
 
 export const handleContentForm = async (result: ContentUpdateForm) => {
   if (result) {
-    // console.log("on create content link", { result });
-
     switch (result.type) {
       case "content":
-        await addContent(result as ContentUpdateForm, supabaseClient);
+        await addContent(result as ContentUpdateForm);
         break;
       case "answer_sheet":
-        await addAnswerSheet(result as ContentUpdateForm, supabaseClient);
+        await addAnswerSheet(result as ContentUpdateForm);
         break;
       default:
         throw new Error(`Unsupported content type: ${result.type}`);
