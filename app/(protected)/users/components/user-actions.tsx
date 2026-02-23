@@ -47,7 +47,7 @@ export const UserActions = ({ user }: UserActionsProps) => {
       });
     } else {
       toast.success("Reset password email sent", {
-        description: `Reset token generated for ${user.email}`,
+        description: `If the account exists, an email was sent to ${user.email}`,
       });
     }
   };

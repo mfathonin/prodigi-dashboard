@@ -1,5 +1,5 @@
 import { randomBytes, createHash, randomUUID } from "crypto";
-import { execute, query, queryOne } from "@/lib/db/utils";
+import { execute, query, queryOne, withTransaction } from "@/lib/db/utils";
 import { hashPassword, verifyPassword } from "./password";
 import { createSession, destroySession, getSessionUser } from "./session";
 import type { AppUser, SessionUser } from "./types";
@@ -79,21 +79,31 @@ export async function requestPasswordReset(email: string) {
 }
 
 export async function consumePasswordResetToken(token: string, newPassword: string) {
-  const row = await queryOne<{ user_id: string; expires_at: string }>(
-    `select user_id, expires_at from password_reset_tokens where token_hash = ?`,
-    [sha256(token)]
-  );
-  if (!row) throw new Error("Invalid token");
-  if (new Date(row.expires_at).getTime() < Date.now()) throw new Error("Token expired");
+  const tokenHash = sha256(token);
+  const userId = await withTransaction(async (db) => {
+    const row = await db.queryOne<{ user_id: string; expires_at: string }>(
+      `select user_id, expires_at from password_reset_tokens where token_hash = ?`,
+      [tokenHash]
+    );
+    if (!row) throw new Error("Invalid token");
+    if (new Date(row.expires_at).getTime() < Date.now()) throw new Error("Token expired");
 
-  const now = new Date().toISOString();
-  await execute(`update users set password_hash = ?, updated_at = ? where id = ?`, [
-    hashPassword(newPassword),
-    now,
-    row.user_id,
-  ]);
-  await execute(`delete from password_reset_tokens where token_hash = ?`, [sha256(token)]);
-  await createSession(row.user_id);
+    const now = new Date().toISOString();
+    await db.execute(`update users set password_hash = ?, updated_at = ? where id = ?`, [
+      hashPassword(newPassword),
+      now,
+      row.user_id,
+    ]);
+    const deleted = await db.execute(
+      `delete from password_reset_tokens where token_hash = ?`,
+      [tokenHash]
+    );
+    if (deleted.rowsAffected === 0) throw new Error("Invalid token");
+
+    return row.user_id;
+  });
+
+  await createSession(userId);
 }
 
 export async function updatePasswordForCurrentUser(newPassword: string) {
@@ -107,6 +117,7 @@ export async function updatePasswordForCurrentUser(newPassword: string) {
 }
 
 export async function deleteUserById(userId: string) {
+  await execute(`delete from sessions where user_id = ?`, [userId]);
   await execute(`delete from users where id = ?`, [userId]);
   await execute(`delete from user_roles where id = ?`, [userId]);
 }
@@ -122,37 +133,47 @@ export async function inviteUserByEmail(email: string) {
 }
 
 export async function consumeInviteToken(token: string, password: string) {
-  const row = await queryOne<{ email: string; expires_at: string }>(
-    `select email, expires_at from invite_tokens where token_hash = ?`,
-    [sha256(token)]
-  );
-  if (!row) throw new Error("Invalid invite token");
-  if (new Date(row.expires_at).getTime() < Date.now()) throw new Error("Invite token expired");
-
-  const existing = await queryOne<{ id: string }>(
-    `select id from users where lower(email)=lower(?)`,
-    [row.email]
-  );
-  const userId = existing?.id ?? randomUUID();
-  const now = new Date().toISOString();
-
-  if (existing) {
-    await execute(`update users set password_hash = ?, updated_at = ? where id = ?`, [
-      hashPassword(password),
-      now,
-      userId,
-    ]);
-  } else {
-    await execute(
-      `insert into users (id, email, password_hash, created_at, updated_at) values (?, ?, ?, ?, ?)`,
-      [userId, row.email, hashPassword(password), now, now]
+  const tokenHash = sha256(token);
+  const userId = await withTransaction(async (db) => {
+    const row = await db.queryOne<{ email: string; expires_at: string }>(
+      `select email, expires_at from invite_tokens where token_hash = ?`,
+      [tokenHash]
     );
-  }
+    if (!row) throw new Error("Invalid invite token");
+    if (new Date(row.expires_at).getTime() < Date.now()) throw new Error("Invite token expired");
 
-  await execute(`insert or ignore into user_roles (id, role, created_at) values (?, 'user', ?)`, [
-    userId,
-    now,
-  ]);
-  await execute(`delete from invite_tokens where token_hash = ?`, [sha256(token)]);
+    const existing = await db.queryOne<{ id: string }>(
+      `select id from users where lower(email)=lower(?)`,
+      [row.email]
+    );
+    const nextUserId = existing?.id ?? randomUUID();
+    const now = new Date().toISOString();
+
+    if (existing) {
+      await db.execute(`update users set password_hash = ?, updated_at = ? where id = ?`, [
+        hashPassword(password),
+        now,
+        nextUserId,
+      ]);
+    } else {
+      await db.execute(
+        `insert into users (id, email, password_hash, created_at, updated_at) values (?, ?, ?, ?, ?)`,
+        [nextUserId, row.email, hashPassword(password), now, now]
+      );
+    }
+
+    await db.execute(`insert or ignore into user_roles (id, role, created_at) values (?, 'user', ?)`, [
+      nextUserId,
+      now,
+    ]);
+    const deleted = await db.execute(
+      `delete from invite_tokens where token_hash = ?`,
+      [tokenHash]
+    );
+    if (deleted.rowsAffected === 0) throw new Error("Invalid invite token");
+
+    return nextUserId;
+  });
+
   await createSession(userId);
 }

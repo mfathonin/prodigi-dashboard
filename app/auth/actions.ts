@@ -51,8 +51,8 @@ export const handleResetPassword = async (
 
     const resetUrl = `${getServerAppBaseUrl()}/auth/update-password?token=${token}`;
     await sendPasswordResetEmail(email, resetUrl);
-    console.info("Password reset link", { email, resetUrl });
-    return { data: resetUrl, error: null };
+    console.info("Password reset email sent", { email });
+    return { data: "If account exists, reset is available", error: null };
   } catch (error) {
     return handleError(error);
   }
