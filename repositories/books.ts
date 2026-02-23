@@ -1,6 +1,6 @@
 import { constants } from "@/lib/constants";
 import { BooksAttributes, QueryOptions, Tables } from "@/models";
-import { execute, query, queryOne } from "@/lib/db/utils";
+import { execute, query, queryOne, withTransaction } from "@/lib/db/utils";
 import { AttributesRepository } from "./attributes";
 
 const {
@@ -138,6 +138,46 @@ export class BookRepository implements Book {
   }
 
   async deleteBook(id: string): Promise<void> {
-    await execute(`delete from books where uuid = ?`, [id]);
+    await withTransaction(async (db) => {
+      const linkedRows = await db.query<{ link_id: string | null }>(
+        `select link_id from contents where book_id = ?`,
+        [id]
+      );
+      const linkIds = [...new Set(
+        linkedRows
+          .map((row) => row.link_id)
+          .filter((linkId): linkId is string => typeof linkId === "string" && linkId.length > 0)
+      )];
+
+      const exerciseRows = await db.query<{ uuid: string }>(
+        `select uuid from exercises where book_id = ?`,
+        [id]
+      );
+      const exerciseIds = exerciseRows.map((row) => row.uuid);
+
+      if (exerciseIds.length > 0) {
+        await db.execute(
+          `delete from exercise_questions where exercise_id in (${exerciseIds
+            .map(() => "?")
+            .join(",")})`,
+          exerciseIds
+        );
+      }
+
+      await db.execute(`delete from exercises where book_id = ?`, [id]);
+      await db.execute(`delete from answer_sheets where book_id = ?`, [id]);
+      await db.execute(`delete from books_attributes where book_id = ?`, [id]);
+      await db.execute(`delete from contents where book_id = ?`, [id]);
+
+      if (linkIds.length > 0) {
+        await db.execute(
+          `delete from link where uuid in (${linkIds.map(() => "?").join(",")})
+           and not exists (select 1 from contents c where c.link_id = link.uuid)`,
+          linkIds
+        );
+      }
+
+      await db.execute(`delete from books where uuid = ?`, [id]);
+    });
   }
 }
