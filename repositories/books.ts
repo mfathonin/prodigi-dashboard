@@ -105,7 +105,7 @@ export class BookRepository implements Book {
               count(c.id) as contents
        from books b
        left join contents c on c.book_id = b.uuid and c.deleted_at is null
-       where b.uuid = ?
+       where b.uuid = ? and b.deleted_at is null
        group by b.id, b.uuid, b.title, b.firestore_id, b.created_at, b.updated_at, b.deleted_at`,
       [id]
     );
