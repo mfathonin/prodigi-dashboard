@@ -78,9 +78,11 @@ export class BookRepository implements Book {
       args.push(...filteredBookIds);
     }
 
-    const sortBy = SORTABLE_COLUMNS.has(queryOptions?.sortBy || "")
-      ? queryOptions?.sortBy
-      : "title";
+    const sortByCandidate = queryOptions?.sortBy;
+    const sortBy: string =
+      sortByCandidate && SORTABLE_COLUMNS.has(sortByCandidate)
+        ? sortByCandidate
+        : "title";
     const orderBy = queryOptions?.orderBy === "desc" ? "desc" : "asc";
 
     const rows = await query<any>(
