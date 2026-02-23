@@ -27,7 +27,6 @@ type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 export default function ResetPasswordForm() {
   const [errorMessage, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [resetLink, setResetLink] = useState<string | null>(null);
   const router = useRouter();
 
   const form = useForm<ResetPasswordForm>({
@@ -38,7 +37,7 @@ export default function ResetPasswordForm() {
   });
 
   const onSubmit = async (values: ResetPasswordForm) => {
-    const { data, error } = await handleResetPassword(values.email);
+    const { error } = await handleResetPassword(values.email);
 
     if (error) {
       setError(error.message);
@@ -46,7 +45,6 @@ export default function ResetPasswordForm() {
       router.push("/");
     } else {
       setSuccessMessage("Password reset email sent. Please check your inbox.");
-      setResetLink(data || null);
       setError(null);
     }
   };
@@ -64,14 +62,6 @@ export default function ResetPasswordForm() {
           role="alert"
         >
           <p>{successMessage}</p>
-          {resetLink && (
-            <p className="mt-2 text-sm break-all">
-              Dev reset link:{" "}
-              <a className="underline" href={resetLink}>
-                {resetLink}
-              </a>
-            </p>
-          )}
         </div>
       )}
 

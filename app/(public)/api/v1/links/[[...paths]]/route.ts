@@ -55,6 +55,12 @@ export async function GET(
       },
     });
   } catch (error) {
-    return new Response("Link not found", { status: 404 });
+    const message = error instanceof Error ? error.message : "";
+    if (message === "Link not found" || message === "Content not found") {
+      return new Response("Link not found", { status: 404 });
+    }
+
+    console.error("[api/v1/links] failed:", error);
+    return new Response("Error fetching link", { status: 500 });
   }
 }
