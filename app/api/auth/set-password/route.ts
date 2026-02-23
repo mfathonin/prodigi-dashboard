@@ -28,8 +28,8 @@ export async function POST(request: Request) {
 
     if (error instanceof Error && error.message === "Session setup failed") {
       return NextResponse.json(
-        { error: "Password created. Please sign in again." },
-        { status: 500 }
+        { ok: true, warning: "Password created. Please sign in again." },
+        { status: 200 }
       );
     }
 

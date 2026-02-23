@@ -34,7 +34,7 @@ export const downloadQRCodes = async (
       return new Promise<void>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (!blob) {
-            reject(new Error("Blob is not supported"));
+            reject(new Error("Failed to generate blob from canvas"));
             return;
           }
 
@@ -59,7 +59,7 @@ export const downloadQRCodes = async (
     await new Promise<void>((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (!blob) {
-          reject(new Error("Blob is not supported"));
+          reject(new Error("Failed to generate blob from canvas"));
           return;
         }
 
