@@ -117,9 +117,11 @@ export async function updatePasswordForCurrentUser(newPassword: string) {
 }
 
 export async function deleteUserById(userId: string) {
-  await execute(`delete from sessions where user_id = ?`, [userId]);
-  await execute(`delete from users where id = ?`, [userId]);
-  await execute(`delete from user_roles where id = ?`, [userId]);
+  await withTransaction(async (db) => {
+    await db.execute(`delete from sessions where user_id = ?`, [userId]);
+    await db.execute(`delete from user_roles where id = ?`, [userId]);
+    await db.execute(`delete from users where id = ?`, [userId]);
+  });
 }
 
 export async function inviteUserByEmail(email: string) {

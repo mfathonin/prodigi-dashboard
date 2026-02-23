@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUserWithRoles } from "@/lib/auth/service";
+import { withTransaction } from "@/lib/db/utils";
 import { BookRepository } from "@/repositories/books";
-import { AttributesRepository } from "@/repositories/attributes";
 
 export async function PUT(
   request: Request,
@@ -33,12 +33,53 @@ export async function PUT(
   if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
 
   try {
-    const bookRepo = new BookRepository(null);
-    const attrRepo = new AttributesRepository(null);
+    const updated = await withTransaction(async (db) => {
+      const now = new Date().toISOString();
+      const existing = await db.queryOne<{ uuid: string }>(
+        `select uuid from books where uuid = ?`,
+        [params.uuid]
+      );
 
-    const updated = await bookRepo.upsertBook({ uuid: params.uuid, title } as any);
-    if (attributes.length > 0) await attrRepo.addBookAttributes(params.uuid, attributes);
-    if (deleted.length > 0) await attrRepo.removeBookAttributes(params.uuid, deleted);
+      if (existing) {
+        await db.execute(
+          `update books set title = ?, updated_at = ? where uuid = ?`,
+          [title, now, params.uuid]
+        );
+      } else {
+        await db.execute(
+          `insert into books (uuid, title, firestore_id, created_at, updated_at) values (?, ?, ?, ?, ?)`,
+          [params.uuid, title, null, now, now]
+        );
+      }
+
+      for (const attributeId of attributes) {
+        await db.execute(
+          `insert into books_attributes (book_id, attribute_id) values (?, ?)`,
+          [params.uuid, attributeId]
+        );
+      }
+
+      if (deleted.length > 0) {
+        await db.execute(
+          `delete from books_attributes
+           where book_id = ? and attribute_id in (${deleted.map(() => "?").join(",")})`,
+          [params.uuid, ...deleted]
+        );
+      }
+
+      return db.queryOne<{
+        id: number;
+        uuid: string;
+        title: string;
+        firestore_id: string | null;
+        created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
+      }>(
+        `select id, uuid, title, firestore_id, created_at, updated_at, deleted_at from books where uuid = ?`,
+        [params.uuid]
+      );
+    });
 
     return NextResponse.json(updated);
   } catch (error) {

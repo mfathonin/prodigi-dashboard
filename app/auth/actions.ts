@@ -13,6 +13,7 @@ import { sendPasswordResetEmail } from "@/lib/email";
 import { getServerAppBaseUrl } from "@/lib/url";
 
 const errors = constants.errors.auth;
+const AUTH_ERROR_MESSAGES = new Set(["Invalid credentials", "Unauthorized"]);
 
 export const handleSignIn = async (
   email: string,
@@ -71,8 +72,20 @@ export const handleUpdatePassword = async (
 };
 
 const handleError = (error: unknown) => {
-  if (error instanceof Error)
-    return { data: null, error: { status: 401, message: error.message } };
+  if (error instanceof Error) {
+    if (AUTH_ERROR_MESSAGES.has(error.message)) {
+      return { data: null, error: { status: 401, message: error.message } };
+    }
+
+    console.error("[auth/actions] unexpected error:", error);
+    return {
+      data: null,
+      error: {
+        status: 500,
+        message: errors.UNKNOWN,
+      },
+    };
+  }
 
   return {
     data: null,
