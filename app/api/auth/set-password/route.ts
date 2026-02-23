@@ -2,7 +2,12 @@ import { consumeInviteToken } from "@/lib/auth/service";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const token = body?.token as string;
   const password = body?.password as string;
 

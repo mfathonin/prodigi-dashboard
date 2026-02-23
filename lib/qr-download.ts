@@ -15,10 +15,14 @@ export const downloadQRCodes = async (
     throw new Error("Browser anda tidak mendukung fitur ini");
   }
 
-  const [{ saveAs }, { default: JSZip }] = await Promise.all([
+  const [{ default: FileSaver }, { default: JSZip }] = await Promise.all([
     import("file-saver"),
     import("jszip"),
   ]);
+
+  if (Array.isArray(data) && !zipName) {
+    throw new Error("zipName is required when data is an array");
+  }
 
   if (Array.isArray(data) && zipName) {
     const zip = new JSZip();
@@ -46,14 +50,26 @@ export const downloadQRCodes = async (
 
     await Promise.all(promises);
     const content = await zip.generateAsync({ type: "blob" });
-    saveAs(content, `${zipName}.zip`);
+    FileSaver.saveAs(content, `${zipName}.zip`);
     return;
   }
 
   if (!Array.isArray(data)) {
     const { canvas, name } = data;
-    canvas.toBlob((blob) => {
-      if (blob) saveAs(blob, `${name}.png`);
+    await new Promise<void>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Blob is not supported"));
+          return;
+        }
+
+        try {
+          FileSaver.saveAs(blob, `${name}.png`);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
     });
   }
 };

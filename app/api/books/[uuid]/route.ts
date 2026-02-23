@@ -54,7 +54,7 @@ export async function PUT(
 
       for (const attributeId of attributes) {
         await db.execute(
-          `insert into books_attributes (book_id, attribute_id) values (?, ?)`,
+          `insert or ignore into books_attributes (book_id, attribute_id) values (?, ?)`,
           [params.uuid, attributeId]
         );
       }
